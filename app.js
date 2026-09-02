@@ -32,6 +32,15 @@ const el = (tag, cls, html) => {
   if (html != null) n.innerHTML = html;
   return n;
 };
+// Kanwy czytaja kolory z tych samych zmiennych CSS co reszta strony — inaczej paleta
+// zyje w dwoch miejscach i przy kazdej zmianie jedno z nich zostaje w tyle.
+const CSS = new Map();
+const c = n => {
+  if (!CSS.has(n)) CSS.set(n, getComputedStyle(document.documentElement).getPropertyValue(n).trim());
+  return CSS.get(n);
+};
+const repaintTokens = () => CSS.clear();
+
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const clip = (s, n) => (String(s).length > n ? String(s).slice(0, n - 1) + '…' : String(s));
 const dl = pairs => '<dl>' + pairs.filter(([, v]) => v != null && v !== '')
@@ -336,43 +345,43 @@ function viewTime(stage, scope) {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, W, H);
 
-    g.font = '700 11px Lato, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.font = `700 11px ${c('--face-ui')}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     const years = (v1 - v0) / 3.156e10;
     const step = years > 60 ? 10 : years > 25 ? 5 : years > 10 ? 2 : 1;
     const y0 = new Date(v0).getUTCFullYear(), y1 = new Date(v1).getUTCFullYear() + 1;
     for (let y = Math.floor(y0 / step) * step; y <= y1; y += step) {
       const x = X(Date.UTC(y, 0, 1));
       if (x < M.l - 1 || x > W - M.r + 1) continue;
-      g.strokeStyle = '#00000018';
+      g.strokeStyle = c('--c-hair-2');
       g.beginPath(); g.moveTo(x, M.t - 6); g.lineTo(x, H - M.b); g.stroke();
-      g.fillStyle = '#8b9896'; g.fillText(y, x, H - M.b + 16);
+      g.fillStyle = c('--c-faint'); g.fillText(y, x, H - M.b + 16);
     }
     if (years < 3.2) {                       // dopiero tu miesiace maja sens
       const MON = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
       for (let y = y0; y <= y1; y++) for (let m = 1; m < 12; m++) {
         const x = X(Date.UTC(y, m, 1));
         if (x < M.l || x > W - M.r) continue;
-        g.strokeStyle = '#0000000d';
+        g.strokeStyle = c('--c-hair');
         g.beginPath(); g.moveTo(x, M.t - 2); g.lineTo(x, H - M.b); g.stroke();
         // liczby rzymskie, bo tak numerowano miesiace w tych listach
-        if (years < 1.6) { g.fillStyle = '#9fabaa'; g.fillText(MON[m], x, H - M.b + 16); }
+        if (years < 1.6) { g.fillStyle = c('--c-faint'); g.fillText(MON[m], x, H - M.b + 16); }
       }
     }
 
     g.textBaseline = 'middle';
     for (const lane of lanes) {
       const y = M.t + lane.i * rowH + rowH / 2;
-      g.strokeStyle = '#00000012'; g.lineWidth = 1;
+      g.strokeStyle = c('--c-hair'); g.lineWidth = 1;
       g.beginPath();
       g.moveTo(Math.max(X(lane.first), M.l), y); g.lineTo(Math.min(X(lane.last), W - M.r), y);
       g.stroke();
       g.textAlign = 'right';
-      g.fillStyle = lane.n > 3 ? '#16201f' : '#8b9896';
-      g.font = `${lane.n > 3 ? 700 : 400} ${Math.min(13, Math.max(9.5, rowH * .6))}px Lato, sans-serif`;
+      g.fillStyle = lane.n > 3 ? c('--c-ink') : c('--c-faint');
+      g.font = `${lane.n > 3 ? 700 : 400} ${Math.min(13, Math.max(9.5, rowH * .6))}px ${c('--face-ui')}`;
       g.fillText(lane.key === NOWHERE ? t.nowhere : lane.key, M.l - 12, y);
       if (rowH > 13) {
-        g.font = '400 9px "IBM Plex Mono", monospace'; g.textAlign = 'left';
-        g.fillStyle = '#8b9896'; g.fillText(lane.n, W - M.r + 6, y);
+        g.font = `400 9px ${c('--face-mono')}`; g.textAlign = 'left';
+        g.fillStyle = c('--c-faint'); g.fillText(lane.n, W - M.r + 6, y);
       }
     }
 
@@ -383,8 +392,8 @@ function viewTime(stage, scope) {
     g.beginPath(); g.rect(M.l, 0, W - M.l - M.r, H); g.clip();
     for (const m of marks) {
       if (m.a > cut || m.b < M.l || m.a > W - M.r) continue;
-      g.fillStyle = S.letter === m.l.id ? '#14574f'
-                  : doubt(m.l) ? 'rgba(156,58,44,.38)' : 'rgba(22,32,31,.72)';
+      g.fillStyle = S.letter === m.l.id ? c('--c-accent')
+                  : doubt(m.l) ? c('--c-doubt') : c('--c-mark');
       g.fillRect(m.a, m.y, Math.max(Math.min(m.b, cut) - m.a, .8), m.h);
     }
     g.restore();
@@ -516,17 +525,17 @@ function viewPeople(stage) {
     g.clearRect(0, 0, W, H);
     const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 68;
 
-    g.strokeStyle = '#00000012';
+    g.strokeStyle = c('--c-hair');
     for (const f of [.45, .72, 1]) { g.beginPath(); g.arc(cx, cy, R * f, 0, 7); g.stroke(); }
     // podzialka mowi, ze pierscien to zegar — bez niej nikt sie tego nie domysli
-    g.font = '700 10.5px Lato, sans-serif';
+    g.font = `700 10.5px ${c('--face-ui')}`;
     g.textAlign = 'center'; g.textBaseline = 'middle';
     for (let y = 1590; y <= new Date(B).getUTCFullYear(); y += 10) {
       const ang = ((Date.UTC(y, 0, 1) - A) / (B - A || 1)) * Math.PI * 2 - Math.PI / 2;
-      g.strokeStyle = '#0000001f'; g.beginPath();
+      g.strokeStyle = c('--c-hair-2'); g.beginPath();
       g.moveTo(cx + Math.cos(ang) * R, cy + Math.sin(ang) * R);
       g.lineTo(cx + Math.cos(ang) * (R + 11), cy + Math.sin(ang) * (R + 11)); g.stroke();
-      g.fillStyle = '#8b9896';
+      g.fillStyle = c('--c-faint');
       g.fillText(y, cx + Math.cos(ang) * (R + 22), cy + Math.sin(ang) * (R + 22));
     }
 
@@ -536,7 +545,7 @@ function viewPeople(stage) {
       return { p, n, on: p.id === S.person, x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r };
     });
     for (const q of pos) {
-      g.strokeStyle = q.on ? '#1d5f58' : '#1e26281a';
+      g.strokeStyle = q.on ? c('--c-accent') : c('--c-spoke');
       g.lineWidth = q.on ? 1.6 : Math.min(3, .5 + q.n / maxN * 2.5);
       g.beginPath(); g.moveTo(cx, cy); g.lineTo(q.x, q.y); g.stroke();
     }
@@ -544,17 +553,17 @@ function viewPeople(stage) {
       const rr = 2.5 + Math.sqrt(q.n) * 1.6;
       // czerwien rubrykowa znaczy w tym serwisie WYLACZNIE niepewna date — wybor
       // zaznaczamy atramentem, nie nia
-      g.fillStyle = q.on ? '#16201f' : '#14574f';
+      g.fillStyle = q.on ? c('--c-ink') : c('--c-accent');
       g.beginPath(); g.arc(q.x, q.y, q.on ? rr + 1.5 : rr, 0, 7); g.fill();
       if (q.on || q.n >= maxN * .12 || partners.length < 22) {
-        g.fillStyle = q.on ? '#16201f' : '#16201fb3';
-        g.font = '700 13px Lato, sans-serif';
+        g.fillStyle = q.on ? c('--c-ink') : c('--c-ink-2');
+        g.font = `700 13px ${c('--face-ui')}`;
         g.textAlign = q.x < cx ? 'right' : 'left'; g.textBaseline = 'middle';
         g.fillText(q.p.name, q.x + (q.x < cx ? -rr - 6 : rr + 6), q.y);
       }
     }
-    g.fillStyle = '#16201f'; g.beginPath(); g.arc(cx, cy, 5, 0, 7); g.fill();
-    g.fillStyle = '#16201f'; g.font = '700 14px Lato, sans-serif';
+    g.fillStyle = c('--c-ink'); g.beginPath(); g.arc(cx, cy, 5, 0, 7); g.fill();
+    g.fillStyle = c('--c-ink'); g.font = `700 14px ${c('--face-ui')}`;
     g.textAlign = 'center'; g.textBaseline = 'top';
     g.fillText(hub.name, cx, cy + 11);
     cv._pos = pos;
@@ -652,8 +661,8 @@ function viewPlaces(stage) {
     const g = cv.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    g.fillStyle = '#c3cdcf'; g.fillRect(0, 0, W, H);      // morze: carta azzurra
-    g.fillStyle = '#e8ecec'; g.strokeStyle = '#00000020'; g.lineWidth = 1;
+    g.fillStyle = c('--c-sea'); g.fillRect(0, 0, W, H);      // morze: carta azzurra
+    g.fillStyle = c('--c-land'); g.strokeStyle = c('--c-hair-2'); g.lineWidth = 1;
     for (const r of COAST) {
       g.beginPath();
       for (let i = 0; i < r.length; i += 2) {
@@ -668,8 +677,8 @@ function viewPlaces(stage) {
     if (k > k0 * 1.6) {
       const step = k > k0 * 7 ? 1 : k > k0 * 3 ? 2 : 5;
       const lonA = Math.floor(bb.w + (0 - ox) / k), lonB = Math.ceil(bb.w + (W - ox) / k);
-      g.strokeStyle = '#00000010'; g.lineWidth = 1;
-      g.font = '400 9px "IBM Plex Mono", monospace'; g.fillStyle = '#8b9896';
+      g.strokeStyle = c('--c-hair'); g.lineWidth = 1;
+      g.font = `400 9px ${c('--face-mono')}`; g.fillStyle = c('--c-faint');
       for (let lon = Math.ceil(lonA / step) * step; lon <= lonB; lon += step) {
         const x = X(lon);
         g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke();
@@ -693,10 +702,10 @@ function viewPlaces(stage) {
     }));
     for (const s of spots) {
       if (s.rin) {
-        g.fillStyle = s.on ? '#1e2628' : 'rgba(20,87,79,.58)';
+        g.fillStyle = s.on ? c('--c-ink') : c('--c-accent-fill');
         g.beginPath(); g.arc(s.x, s.y, Math.min(s.rin, s.r), 0, 7); g.fill();
       }
-      g.strokeStyle = s.on ? '#16201f' : '#14574f';
+      g.strokeStyle = s.on ? c('--c-ink') : c('--c-accent');
       g.lineWidth = s.on ? 2 : 1.1;
       g.beginPath(); g.arc(s.x, s.y, s.r, 0, 7); g.stroke();
     }
@@ -704,7 +713,7 @@ function viewPlaces(stage) {
     // przy przyblizeniu jest miejsce na wiecej nazw; zawsze podpisujemy wybrane
     const budget = k > k0 * 2.2 ? pins.length : 12;
     g.font = '400 13px "EB Garamond", Georgia, serif';
-    g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillStyle = '#1e2628';
+    g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillStyle = c('--c-ink');
     const placed = [];
     for (const s of [...spots].sort((x, y) => (y.on - x.on) || y.r - x.r)) {
       if (!s.on && placed.length >= budget) break;
@@ -712,7 +721,7 @@ function viewPlaces(stage) {
       const lx = s.x + s.r + 5, ly = s.y;
       if (!s.on && placed.some(q => Math.abs(q.x - lx) < 70 && Math.abs(q.y - ly) < 13)) continue;
       placed.push({ x: lx, y: ly });
-      g.fillStyle = s.on ? '#16201f' : '#16201fcc';
+      g.fillStyle = s.on ? c('--c-ink') : c('--c-ink-2');
       g.fillText(s.p.label, lx, ly);
     }
   };

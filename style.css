@@ -1,7 +1,9 @@
 /* OPUS — korespondencja Henry'ego Wottona.
 
-   Paleta wychodzi z carta azzurra — niebieskoszarego papieru szmacianego produkowanego
-   w Wenecji od XVI w. Wotton spedzil tam dwadziescia lat.
+   Paleta: kamien i ULTRAMARYNA. Ultramaryne robiono z lapis lazuli sprowadzanego z Afganistanu,
+   a Wenecja byla portem, przez ktory pigment wchodzil do Europy — stad wloskie oltremare,
+   "zza morza". Najdrozszy kolor epoki, w miescie, w ktorym Wotton przesiedzial dwadziescia lat.
+   Uzywamy go tak, jak go uzywano: oszczednie i tylko tam, gdzie ma cos znaczyc.
 
    Czerwien rubrykowa ma tu JEDNO zadanie: oznaczac niepewnosc datowania. Nigdy dekoracyjnie.
 
@@ -9,16 +11,16 @@
    — incipit, data zapisana reka Wottona, streszczenie. Mono trzyma dane w kolumnach. */
 
 :root {
-  --paper:      #eef1f1;   /* tresc: jasna, zeby dalo sie czytac dlugo */
-  --rail:       #cbd4d5;   /* szyna: wyrazny panel, nie mgla */
-  --rail-line:  #00000014;
-  --sheet:      #f6f8f8;
-  --ink:        #16201f;
-  --ink-soft:   #55625f;
-  --ink-faint:  #8b9896;
-  --verdigris:  #14574f;
-  --verd-soft:  #14574f1f;
-  --rubric:     #9c3a2c;
+  --paper:      #eae7e0;   /* kamien: jasny, zeby dalo sie czytac dlugo */
+  --rail:       #d8d4c9;   /* szyna: wyrazny panel, nie mgla */
+  --rail-line:  #00000016;
+  --sheet:      #f4f2ed;
+  --ink:        #1b1a17;
+  --ink-soft:   #5e584c;
+  --ink-faint:  #9b9384;
+  --accent:     #2c3f9e;   /* ultramaryna */
+  --accent-soft:#2c3f9e1c;
+  --rubric:     #a5402d;
 
   --w-rail: 236px;
   --w-sheet: 452px;
@@ -26,6 +28,26 @@
   --sans:  "Lato", system-ui, -apple-system, sans-serif;
   --serif: "EB Garamond", Georgia, serif;
   --mono:  "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  /* Kanwy (os czasu, gwiazda, mapa) czytaja stad — paleta ma jedno miejsce, nie dwa. */
+  --face-ui:   Lato, sans-serif;
+  --face-mono: "IBM Plex Mono", monospace;
+  --c-ink:          #1b1a17;
+  --c-ink-2:        #1b1a17b3;
+  --c-faint:        #9b9384;
+  --c-accent:       #2c3f9e;
+  --c-accent-fill:  rgba(44,63,158,.55);
+  --c-mark:         rgba(27,26,23,.74);
+  --c-doubt:        rgba(165,64,45,.4);
+  --c-hair:         #00000012;
+  --c-hair-2:       #00000022;
+  --c-spoke:        #1b1a171a;
+  --c-sea:          #c7cbda;
+  --c-land:         #f0ede6;
+
+  --on-accent: #fff;      /* tekst na plamie akcentu */
+  --on-ink:    #fff;      /* tekst na plamie atramentu */
+  --wash:      #ffffff;   /* naklada sie z niska alfa na hover i pigulki */
 }
 
 * { box-sizing: border-box; }
@@ -49,9 +71,9 @@ body.sheet-open { grid-template-columns: var(--w-rail) minmax(0, 1fr) var(--w-sh
 
 button, input, textarea, select { font: inherit; color: inherit; }
 button { background: none; border: none; cursor: pointer; padding: 0; }
-a { color: var(--verdigris); }
-::selection { background: var(--verdigris); color: #fff; }
-:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; border-radius: 3px; }
+a { color: var(--accent); }
+::selection { background: var(--accent); color: var(--on-accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 
 /* Etykieta ma byc czytelna, a nie szeptem w wersalikach z rozstrzelona spacja —
    to najszybszy sposob, zeby interfejs wygladal jak kazdy inny. */
@@ -87,17 +109,17 @@ a { color: var(--verdigris); }
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #ffffffbf;
-  border: 1px solid #0000001f;
+  background: color-mix(in srgb, var(--wash) 75%, transparent);
+  border: 1px solid var(--c-hair-2);
   border-radius: 6px;
   padding: 0 9px;
   height: 36px;
   cursor: text;
   transition: border-color .12s, background .12s;
 }
-#search:focus-within { border-color: var(--verdigris); background: #fff; }
+#search:focus-within { border-color: var(--accent); background: var(--wash); }
 #search svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--ink-faint); stroke-width: 1.6; }
-#search:focus-within svg { stroke: var(--verdigris); }
+#search:focus-within svg { stroke: var(--accent); }
 #find { flex: 1; min-width: 0; border: none; background: none; outline: none; font: 400 14px/1 var(--sans); }
 #find::placeholder { color: var(--ink-faint); }
 #find::-webkit-search-cancel-button { -webkit-appearance: none; }
@@ -122,19 +144,20 @@ a { color: var(--verdigris); }
   color: var(--ink-soft);
   transition: background .12s, color .12s;
 }
-#views button:hover { background: #ffffff8c; color: var(--ink); }
-#views button[aria-current="true"] { background: var(--verdigris); color: #fff; }
+#views button:hover { background: color-mix(in srgb, var(--wash) 55%, transparent); color: var(--ink); }
+#views button[aria-current="true"] { background: var(--accent); color: var(--on-accent); }
 #views button i {
   font: 400 11.5px/1 var(--mono); font-style: normal;
-  color: var(--ink-faint); background: #ffffff9e; border-radius: 20px; padding: 3px 7px 2px;
+  color: var(--ink-faint); background: color-mix(in srgb, var(--wash) 62%, transparent); border-radius: 20px; padding: 3px 7px 2px;
 }
-#views button[aria-current="true"] i { color: #ffffffd9; background: #ffffff2e; }
+#views button[aria-current="true"] i { color: color-mix(in srgb, var(--on-accent) 85%, transparent);
+  background: color-mix(in srgb, var(--on-accent) 18%, transparent); }
 
 #foot { margin-top: auto; display: grid; gap: 12px; padding: 0 8px; }
 #lang { display: flex; align-items: center; gap: 6px; }
 #lang button { font: 700 11.5px/1 var(--sans); color: var(--ink-faint); padding: 4px 6px; border-radius: 4px; }
-#lang button:hover { color: var(--ink); background: #ffffff8c; }
-#lang button[aria-current="true"] { color: #fff; background: var(--ink); }
+#lang button:hover { color: var(--ink); background: color-mix(in srgb, var(--wash) 55%, transparent); }
+#lang button[aria-current="true"] { color: var(--on-ink); background: var(--ink); }
 #lang span { color: var(--ink-faint); }
 
 #src { padding-top: 11px; border-top: 1px solid var(--rail-line); }
@@ -168,11 +191,11 @@ a { color: var(--verdigris); }
 #scope .n { font: 400 15px/1.3 var(--mono); color: var(--ink-faint); }
 #scope .chip {
   font: 400 13px/1 var(--sans);
-  background: var(--verd-soft); color: var(--verdigris);
+  background: var(--accent-soft); color: var(--accent);
   border-radius: 20px; padding: 5px 11px 4px;
 }
 #clear { font: 700 13px/1 var(--sans); color: var(--rubric); padding: 5px 8px; border-radius: 4px; }
-#clear:hover { background: #9c3a2c17; }
+#clear:hover { background: #a5402d1a; }
 
 #stage { overflow: auto; position: relative; min-height: 0; }
 .pad { padding: 4px 28px 44px; max-width: 1120px; }
@@ -191,37 +214,38 @@ a { color: var(--verdigris); }
   text-align: left;
   border-bottom: 1px solid #00000010;
 }
-.letter:hover { background: #ffffffa6; }
-.letter[aria-current="true"] { background: #fff; box-shadow: inset 3px 0 0 var(--verdigris); }
+.letter:hover { background: color-mix(in srgb, var(--wash) 62%, transparent); }
+.letter[aria-current="true"] { background: var(--wash); box-shadow: inset 3px 0 0 var(--accent); }
 
 .letter .when { text-align: right; padding-top: 3px; }
 .letter .when time { font: 400 12.5px/1.4 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
 .letter .when time.doubt { color: var(--rubric); }
 .letter .who { font: 700 12.5px/1.45 var(--sans); color: var(--ink); }
-.letter .incipit { font: italic 400 17.5px/1.36 var(--serif); margin: 2px 0 0; max-width: 64ch; color: #29332f; }
+.letter .incipit { font: italic 400 17.5px/1.36 var(--serif); margin: 2px 0 0; max-width: 64ch; color: var(--ink); }
 .letter .marked { font: 400 13px/1.45 var(--serif); color: var(--ink-soft); margin-top: 3px; }
 .letter .tags { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 5px; }
 
 .tag {
   font: 400 12px/1 var(--sans);
   color: var(--ink-soft);
-  background: #ffffffc4;
-  border: 1px solid #00000012;
+  background: color-mix(in srgb, var(--wash) 70%, transparent);
+  border: 1px solid var(--c-hair);
   border-radius: 20px;
   padding: 4px 9px 3px;
 }
-.tag:hover { border-color: var(--verdigris); color: var(--verdigris); }
-.tag.on { background: var(--verdigris); border-color: var(--verdigris); color: #fff; }
+.tag:hover { border-color: var(--accent); color: var(--accent); }
+.tag.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 #more {
   display: block; margin: 24px auto 0; padding: 10px 22px; border-radius: 6px;
-  background: #ffffffc4; border: 1px solid #00000014; font: 700 13px/1 var(--sans);
+  background: color-mix(in srgb, var(--wash) 70%, transparent); border: 1px solid var(--c-hair-2);
+  font: 700 13px/1 var(--sans);
 }
-#more:hover { background: #fff; }
+#more:hover { background: var(--wash); }
 
 .yr {
   position: sticky; top: 0; z-index: 2;
-  background: linear-gradient(var(--paper) 66%, #eef1f100);
+  background: linear-gradient(var(--paper) 66%, color-mix(in srgb, var(--paper) 0%, transparent));
   padding: 18px 0 8px;
   font: 900 13px/1 var(--sans); color: var(--ink-faint);
 }
@@ -230,11 +254,11 @@ a { color: var(--verdigris); }
 .empty { padding: 52px 0; max-width: 46ch; }
 .empty p { font: 700 19px/1.4 var(--sans); margin: 0 0 8px; }
 .empty span { font: 400 14px/1.65 var(--sans); color: var(--ink-soft); }
-.empty code { font: 400 13px/1.7 var(--mono); color: var(--verdigris); }
+.empty code { font: 400 13px/1.7 var(--mono); color: var(--accent); }
 
 .go {
   margin-top: 11px; display: inline-block; border-radius: 6px;
-  background: var(--verdigris); color: #fff; padding: 8px 15px;
+  background: var(--accent); color: var(--on-accent); padding: 8px 15px;
   font: 700 13px/1 var(--sans);
 }
 .go:hover { background: var(--ink); }
@@ -263,8 +287,8 @@ a { color: var(--verdigris); }
   align-items: center; gap: 10px; width: 100%; text-align: left;
   padding: 8px 10px; border-radius: 6px;
 }
-#roster button:hover { background: #ffffffa6; }
-#roster button[aria-current="true"] { background: #fff; box-shadow: inset 3px 0 0 var(--verdigris); }
+#roster button:hover { background: color-mix(in srgb, var(--wash) 62%, transparent); }
+#roster button[aria-current="true"] { background: var(--wash); box-shadow: inset 3px 0 0 var(--accent); }
 #roster .nm { font: 400 14.5px/1.3 var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #roster button[aria-current="true"] .nm { font-weight: 700; }
 #roster .ct { font: 400 11.5px/1.4 var(--mono); color: var(--ink-faint); }
@@ -274,9 +298,9 @@ a { color: var(--verdigris); }
 
 #egohint {
   position: absolute; left: 26px; bottom: 22px; max-width: 40ch;
-  background: #eef1f1e8; border-radius: 8px; padding: 14px 18px 16px;
+  background: color-mix(in srgb, var(--paper) 91%, transparent); border-radius: 8px; padding: 14px 18px 16px;
 }
-#mapwrap #egohint { background: #eef1f1eb; }
+#mapwrap #egohint { background: color-mix(in srgb, var(--paper) 92%, transparent); }
 #egohint p { margin: 0 0 6px; font: 700 20px/1.2 var(--sans); }
 #egohint .label { display: block; font-weight: 400; line-height: 1.6; }
 
@@ -289,17 +313,18 @@ a { color: var(--verdigris); }
   background: var(--sheet); border: 1px solid #00000017; border-radius: 7px;
   padding: 13px 15px; font: 400 13px/1.65 var(--mono); outline: none;
 }
-#cypher:focus { border-color: var(--verdigris); }
+#cypher:focus { border-color: var(--accent); }
 #qrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-#run { background: var(--verdigris); color: #fff; padding: 9px 20px; border-radius: 6px; font: 700 13px/1 var(--sans); }
+#run { background: var(--accent); color: var(--on-accent); padding: 9px 20px; border-radius: 6px; font: 700 13px/1 var(--sans); }
 #run:hover { background: var(--ink); }
 #qrow .label { font-weight: 400; color: var(--ink-faint); }
 #recipes { display: flex; gap: 6px; flex-wrap: wrap; }
 #recipes button {
   font: 400 12.5px/1 var(--sans); color: var(--ink-soft);
-  background: #ffffffc4; border: 1px solid #00000012; border-radius: 20px; padding: 6px 11px 5px;
+  background: color-mix(in srgb, var(--wash) 70%, transparent); border: 1px solid var(--c-hair);
+  border-radius: 20px; padding: 6px 11px 5px;
 }
-#recipes button:hover { background: #fff; color: var(--ink); border-color: var(--verdigris); }
+#recipes button:hover { background: var(--wash); color: var(--ink); border-color: var(--accent); }
 #qout { overflow: auto; padding: 18px 28px 44px; }
 #qout table { border-collapse: collapse; font: 400 12.5px/1.55 var(--mono); width: 100%; }
 #qout th { text-align: left; font: 700 12px/1 var(--sans); color: var(--ink-soft); padding: 0 16px 9px 0; white-space: nowrap; }
@@ -317,7 +342,7 @@ body:not(.sheet-open) #sheet { display: none; }
   float: right; margin: -6px -10px 0 0; font: 400 21px/1 var(--sans);
   color: var(--ink-faint); padding: 4px 9px; border-radius: 5px;
 }
-#sheet #close:hover { color: var(--rubric); background: #9c3a2c14; }
+#sheet #close:hover { color: var(--rubric); background: #a5402d17; }
 
 /* data tak, jak zapisal ja Wotton — najwazniejsza rzecz na arkuszu */
 #sheet .asmarked { font: 400 27px/1.24 var(--serif); margin: 16px 0 0; max-width: 22ch; }
@@ -334,7 +359,7 @@ body:not(.sheet-open) #sheet { display: none; }
 #sheet dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 18px; margin: 0; }
 #sheet dt { font: 400 13px/1.5 var(--sans); color: var(--ink-faint); }
 #sheet dd { margin: 0; font: 400 14.5px/1.5 var(--sans); }
-#sheet dd button { font: inherit; color: var(--verdigris); text-align: left; font-weight: 700; }
+#sheet dd button { font: inherit; color: var(--accent); text-align: left; font-weight: 700; }
 #sheet dd button:hover { text-decoration: underline; }
 #sheet .chips { display: flex; flex-wrap: wrap; gap: 5px; }
 
