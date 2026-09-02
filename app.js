@@ -723,7 +723,7 @@ function viewPlaces(stage) {
 
     // przy przyblizeniu jest miejsce na wiecej nazw; zawsze podpisujemy wybrane
     const budget = k > k0 * 2.2 ? pins.length : 12;
-    g.font = '400 13px "EB Garamond", Georgia, serif';
+    g.font = `400 13.5px ${c('--face-ui')}`;
     g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillStyle = c('--c-ink');
     const placed = [];
     for (const s of [...spots].sort((x, y) => (y.on - x.on) || y.r - x.r)) {
