@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPUS — the correspondence of Sir Henry Wotton</title>
+<meta name="description" content="526 letters of Sir Henry Wotton, 1589–1639: catalogue, itinerary, network of correspondents, map and a Cypher console over the OPUS graph.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Archivo:wdth,wght@88..100,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/neo4j-driver-lite@5.28.3/lib/browser/neo4j-lite-web.min.js"></script>
+
+<nav id="rail">
+  <div>
+    <h1>OPUS</h1>
+    <p id="subtitle">The correspondence of Sir&nbsp;Henry&nbsp;Wotton<span>1589–1639</span></p>
+    <div id="lang"></div>
+  </div>
+
+  <div id="views">
+    <button data-view="letters" aria-current="true">Letters <i></i></button>
+    <button data-view="time">Time <i></i></button>
+    <button data-view="people">People <i></i></button>
+    <button data-view="places">Places <i></i></button>
+    <button data-view="query">Query <i></i></button>
+  </div>
+
+  <div id="src"></div>
+  <div id="tally"></div>
+</nav>
+
+<main id="main">
+  <header id="bar">
+    <span class="label" id="scope"></span>
+    <input id="find" type="search" placeholder="search…" autocomplete="off">
+  </header>
+  <div id="stage"></div>
+</main>
+
+<aside id="sheet" aria-live="polite"></aside>
+
+<div id="boot">
+  <p class="asmarked">9th of December, CIↃIↃXC. Style of Rome.</p>
+  <span class="label">connecting to Neo4j</span>
+</div>
+
+<script type="module" src="app.js"></script>
+</html>
