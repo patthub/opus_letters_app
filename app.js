@@ -574,50 +574,77 @@ function viewPeople(stage) {
 }
 
 // ── widok: miejsca ────────────────────────────────────────────────────────────
-// Wlasna kanwa zamiast Leafleta z kafelkami: linia brzegowa (20 kB) jedzie z serwisem,
+// Wlasna kanwa zamiast Leafleta z kafelkami: linia brzegowa (74 kB) jedzie z serwisem,
 // wiec mapa dziala offline i na statycznym hostingu, jest w palecie strony i nie opiera sie
 // o cudzy serwer kafelkow (polityka OSM nie przewiduje publicznych serwisow).
 // Odwzorowanie Merkatora — dla Europy wyglada tak, jak ludzie sie spodziewaja.
 
-const merc = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+const merc = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * (180 / Math.PI);
 
 function viewPlaces(stage) {
   const box = el('div'); box.id = 'mapa';
+  const roster = el('div'); roster.id = 'roster';
+  const wrap = el('div'); wrap.id = 'mapwrap';
   const cv = el('canvas');
-  const hint = el('div', null, ''); hint.id = 'maphint';
-  box.append(cv, hint);
+  const hint = el('div'); hint.id = 'egohint';
+  wrap.append(cv, hint);
+  box.append(roster, wrap);
   stage.append(box);
 
-  const pins = S.places.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+  const pins = S.places.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon))
+    .sort((x, y) => (y.sent + y.got) - (x.sent + x.got));
   if (!pins.length) return;
   const maxN = Math.max(...pins.map(p => p.sent || p.got));
-  const named = new Set([...pins].sort((x, y) => (y.sent + y.got) - (x.sent + x.got))
-    .slice(0, 12).map(p => p.label));
+
+  for (const p of pins) {
+    const b = el('button');
+    b.setAttribute('aria-current', String(S.place === p.label));
+    b.innerHTML = `<span class="nm">${esc(p.label)}</span><span class="ct">${p.sent + p.got}</span>`;
+    b.onclick = () => { S.place = S.place === p.label ? null : p.label; S.shown = 80; render(); };
+    roster.append(b);
+  }
+
+  const profile = () => {
+    const p = pins.find(x => x.label === S.place);
+    if (!p) { hint.innerHTML = `<span class="label">${esc(t.legend.zoom)}</span>`; return; }
+    const mine = S.letters.filter(l => l.origin === p.label && l.date).map(l => l.date).sort();
+    hint.innerHTML = `<p>${esc(p.label)}</p>
+      <span class="label">${[
+        p.sent && t.sentFrom(p.sent), p.got && t.arrived(p.got),
+        mine.length && `${t.span} ${mine[0].slice(0, 4)}–${mine[mine.length - 1].slice(0, 4)}`,
+      ].filter(Boolean).map(esc).join(' · ')}</span>
+      <button class="go">${t.showLetters}</button>`;
+    hint.querySelector('.go').onclick = () => { location.hash = '#/letters'; };
+  };
 
   const bb = {
     w: Math.min(...pins.map(p => p.lon)) - 2.5, e: Math.max(...pins.map(p => p.lon)) + 2.5,
     s: Math.min(...pins.map(p => p.lat)) - 1.5, n: Math.max(...pins.map(p => p.lat)) + 1.5,
   };
 
-  let W, H, K, ox, oy, spots = [];
-  const X = lon => (lon - bb.w) * K + ox;
-  const Y = lat => (merc(bb.n) - merc(lat)) * K * (180 / Math.PI) + oy;
+  let W, H, k, ox, oy, k0 = 0, spots = [];
+  const X = lon => (lon - bb.w) * k + ox;
+  const Y = lat => (merc(bb.n) - merc(lat)) * k + oy;
+
+  const fit = () => {
+    k0 = Math.min((W - 60) / (bb.e - bb.w), (H - 60) / (merc(bb.n) - merc(bb.s)));
+    k = k0;
+    ox = (W - (bb.e - bb.w) * k) / 2;
+    oy = (H - (merc(bb.n) - merc(bb.s)) * k) / 2;
+  };
 
   const paint = () => {
     const dpr = devicePixelRatio || 1;
-    W = cv.clientWidth; H = cv.clientHeight;
-    if (!W || !H) return;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    const first = w !== W || h !== H;
+    W = w; H = h;
     cv.width = W * dpr; cv.height = H * dpr;
+    if (first || !k0) fit();
     const g = cv.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const spanX = bb.e - bb.w;
-    const spanY = (merc(bb.n) - merc(bb.s)) * (180 / Math.PI);
-    K = Math.min((W - 60) / spanX, (H - 60) / spanY);
-    ox = (W - spanX * K) / 2;
-    oy = (H - spanY * K) / 2;
-
-    g.fillStyle = '#c3cccd'; g.fillRect(0, 0, W, H);      // morze: carta azzurra
+    g.fillStyle = '#b9c4c6'; g.fillRect(0, 0, W, H);      // morze: carta azzurra
     g.fillStyle = '#dee3e3'; g.strokeStyle = '#00000018'; g.lineWidth = 1;
     for (const r of COAST) {
       g.beginPath();
@@ -628,40 +655,95 @@ function viewPlaces(stage) {
       g.closePath(); g.fill(); g.stroke();
     }
 
-    spots = pins.map(p => ({ p, x: X(p.lon), y: Y(p.lat), r: 3.5 + Math.sqrt(p.sent || p.got) * 2.2 }));
-    for (const s of spots) {
-      g.beginPath(); g.arc(s.x, s.y, s.r, 0, 7);
-      if (s.p.sent) { g.fillStyle = 'rgba(29,95,88,.62)'; g.fill(); }
-      g.strokeStyle = '#1d5f58'; g.lineWidth = s.p.sent ? 1 : 1.4; g.stroke();
+    // przy zblizeniu w glab ladu nie ma sie czym orientowac — siatka wspolrzednych
+    // pojawia sie dopiero wtedy, kiedy jest potrzebna
+    if (k > k0 * 1.6) {
+      const step = k > k0 * 7 ? 1 : k > k0 * 3 ? 2 : 5;
+      const lonA = Math.floor(bb.w + (0 - ox) / k), lonB = Math.ceil(bb.w + (W - ox) / k);
+      g.strokeStyle = '#00000010'; g.lineWidth = 1;
+      g.font = '400 9px "IBM Plex Mono", monospace'; g.fillStyle = '#8fa09f';
+      for (let lon = Math.ceil(lonA / step) * step; lon <= lonB; lon += step) {
+        const x = X(lon);
+        g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke();
+        g.textAlign = 'left'; g.textBaseline = 'top';
+        g.fillText(`${Math.abs(lon)}°${lon < 0 ? 'W' : 'E'}`, x + 3, 4);
+      }
+      for (let lat = 30; lat <= 66; lat += step) {
+        const y = Y(lat);
+        if (y < 0 || y > H) continue;
+        g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke();
+        g.textAlign = 'left'; g.textBaseline = 'bottom';
+        g.fillText(`${lat}°N`, 4, y - 3);
+      }
     }
+
+    spots = pins.map(p => ({
+      p, x: X(p.lon), y: Y(p.lat),
+      r: 3.5 + Math.sqrt(p.sent || p.got) * 2.2,
+      on: p.label === S.place,
+    }));
+    for (const s of spots) {
+      g.beginPath(); g.arc(s.x, s.y, s.on ? s.r + 1.5 : s.r, 0, 7);
+      if (s.p.sent) { g.fillStyle = s.on ? '#1e2628' : 'rgba(29,95,88,.62)'; g.fill(); }
+      g.strokeStyle = s.on ? '#1e2628' : '#1d5f58';
+      g.lineWidth = s.on ? 1.8 : s.p.sent ? 1 : 1.4;
+      g.stroke();
+    }
+
+    // przy przyblizeniu jest miejsce na wiecej nazw; zawsze podpisujemy wybrane
+    const budget = k > k0 * 2.2 ? pins.length : 12;
     g.font = '400 13px "EB Garamond", Georgia, serif';
     g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillStyle = '#1e2628';
     const placed = [];
-    for (const s of [...spots].sort((x, y) => y.r - x.r)) {
-      if (!named.has(s.p.label)) continue;
+    for (const s of [...spots].sort((x, y) => (y.on - x.on) || y.r - x.r)) {
+      if (!s.on && placed.length >= budget) break;
+      if (s.x < -40 || s.x > W + 40 || s.y < -20 || s.y > H + 20) continue;
       const lx = s.x + s.r + 5, ly = s.y;
-      if (placed.some(q => Math.abs(q.x - lx) < 68 && Math.abs(q.y - ly) < 13)) continue;
+      if (!s.on && placed.some(q => Math.abs(q.x - lx) < 70 && Math.abs(q.y - ly) < 13)) continue;
       placed.push({ x: lx, y: ly });
+      g.fillStyle = s.on ? '#1e2628' : '#1e2628cc';
       g.fillText(s.p.label, lx, ly);
     }
   };
 
   const at = (x, y) => spots.find(s => Math.hypot(s.x - x, s.y - y) < Math.max(s.r, 7) + 3);
-  cv.onmousemove = e => {
-    const s = at(e.offsetX, e.offsetY);
-    cv.style.cursor = s ? 'pointer' : 'default';
-    hint.innerHTML = s
-      ? `<p>${esc(s.p.label)}</p><span class="label">${
-          [s.p.sent && t.sentFrom(s.p.sent), s.p.got && t.arrived(s.p.got)]
-            .filter(Boolean).map(esc).join(' · ')}</span>`
-      : '';
-  };
-  cv.onmouseleave = () => { hint.innerHTML = ''; };
-  cv.onclick = e => {
-    const s = at(e.offsetX, e.offsetY);
-    if (s) { S.place = s.p.label; S.shown = 80; location.hash = '#/letters'; }
-  };
+  let drag = null, moved = 0;
 
+  cv.onwheel = e => {
+    e.preventDefault();
+    const f = Math.exp(-e.deltaY * 0.0016);
+    const nk = Math.min(k0 * 12, Math.max(k0, k * f));
+    const g = nk / k;
+    ox = e.offsetX - (e.offsetX - ox) * g;
+    oy = e.offsetY - (e.offsetY - oy) * g;
+    k = nk;
+    if (k === k0) fit();
+    paint();
+  };
+  cv.onmousedown = e => { drag = { x: e.offsetX, y: e.offsetY, ox, oy }; moved = 0; };
+  addEventListener('mouseup', () => { drag = null; });
+  cv.onmousemove = e => {
+    if (drag) {
+      moved = Math.max(moved, Math.hypot(e.offsetX - drag.x, e.offsetY - drag.y));
+      ox = drag.ox + (e.offsetX - drag.x);
+      oy = drag.oy + (e.offsetY - drag.y);
+      cv.style.cursor = 'grabbing';
+      paint();
+      return;
+    }
+    const s = at(e.offsetX, e.offsetY);
+    cv.style.cursor = s ? 'pointer' : 'grab';
+    cv.title = s ? [s.p.label, [s.p.sent && t.sentFrom(s.p.sent), s.p.got && t.arrived(s.p.got)]
+      .filter(Boolean).join(' · ')].join('\n') : '';
+  };
+  cv.onclick = e => {
+    if (moved > 3) return;
+    const s = at(e.offsetX, e.offsetY);
+    if (s) { S.place = s.p.label === S.place ? null : s.p.label; S.shown = 80; render(); }
+  };
+  cv.ondblclick = () => { fit(); paint(); };
+
+  profile();
   const ro = new ResizeObserver(paint); ro.observe(cv);
   stage._cleanup = () => ro.disconnect();
 }
