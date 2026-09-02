@@ -1,0 +1,38 @@
+{
+ "@context": "http://iiif.io/api/image/3/context.json",
+ "id": "iiif/Smith1_letter_91/3",
+ "type": "ImageService3",
+ "protocol": "http://iiif.io/api/image",
+ "profile": "level0",
+ "width": 1700,
+ "height": 2300,
+ "tiles": [
+  {
+   "width": 512,
+   "scaleFactors": [
+    1,
+    2,
+    4,
+    8
+   ]
+  }
+ ],
+ "sizes": [
+  {
+   "width": 1700,
+   "height": 2300
+  },
+  {
+   "width": 850,
+   "height": 1150
+  },
+  {
+   "width": 425,
+   "height": 575
+  },
+  {
+   "width": 213,
+   "height": 288
+  }
+ ]
+}

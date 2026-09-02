@@ -1,0 +1,222 @@
+{
+ "@context": "http://iiif.io/api/presentation/3/context.json",
+ "id": "iiif/Smith1_letter_91/manifest.json",
+ "type": "Manifest",
+ "label": {
+  "none": [
+   "Smith1_letter_91"
+  ]
+ },
+ "items": [
+  {
+   "id": "iiif/Smith1_letter_91/1/canvas",
+   "type": "Canvas",
+   "label": {
+    "none": [
+     "01"
+    ]
+   },
+   "width": 1700,
+   "height": 2300,
+   "items": [
+    {
+     "id": "iiif/Smith1_letter_91/1/page",
+     "type": "AnnotationPage",
+     "items": [
+      {
+       "id": "iiif/Smith1_letter_91/1/annotation",
+       "type": "Annotation",
+       "motivation": "painting",
+       "target": "iiif/Smith1_letter_91/1/canvas",
+       "body": {
+        "id": "iiif/Smith1_letter_91/1/full/max/0/default.jpg",
+        "type": "Image",
+        "format": "image/jpeg",
+        "width": 1700,
+        "height": 2300,
+        "service": [
+         {
+          "id": "iiif/Smith1_letter_91/1",
+          "type": "ImageService3",
+          "profile": "level0",
+          "width": 1700,
+          "height": 2300,
+          "tiles": [
+           {
+            "width": 512,
+            "scaleFactors": [
+             1,
+             2,
+             4,
+             8
+            ]
+           }
+          ],
+          "sizes": [
+           {
+            "width": 1700,
+            "height": 2300
+           },
+           {
+            "width": 850,
+            "height": 1150
+           },
+           {
+            "width": 425,
+            "height": 575
+           },
+           {
+            "width": 213,
+            "height": 288
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "iiif/Smith1_letter_91/2/canvas",
+   "type": "Canvas",
+   "label": {
+    "none": [
+     "02"
+    ]
+   },
+   "width": 1700,
+   "height": 2300,
+   "items": [
+    {
+     "id": "iiif/Smith1_letter_91/2/page",
+     "type": "AnnotationPage",
+     "items": [
+      {
+       "id": "iiif/Smith1_letter_91/2/annotation",
+       "type": "Annotation",
+       "motivation": "painting",
+       "target": "iiif/Smith1_letter_91/2/canvas",
+       "body": {
+        "id": "iiif/Smith1_letter_91/2/full/max/0/default.jpg",
+        "type": "Image",
+        "format": "image/jpeg",
+        "width": 1700,
+        "height": 2300,
+        "service": [
+         {
+          "id": "iiif/Smith1_letter_91/2",
+          "type": "ImageService3",
+          "profile": "level0",
+          "width": 1700,
+          "height": 2300,
+          "tiles": [
+           {
+            "width": 512,
+            "scaleFactors": [
+             1,
+             2,
+             4,
+             8
+            ]
+           }
+          ],
+          "sizes": [
+           {
+            "width": 1700,
+            "height": 2300
+           },
+           {
+            "width": 850,
+            "height": 1150
+           },
+           {
+            "width": 425,
+            "height": 575
+           },
+           {
+            "width": 213,
+            "height": 288
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "iiif/Smith1_letter_91/3/canvas",
+   "type": "Canvas",
+   "label": {
+    "none": [
+     "03"
+    ]
+   },
+   "width": 1700,
+   "height": 2300,
+   "items": [
+    {
+     "id": "iiif/Smith1_letter_91/3/page",
+     "type": "AnnotationPage",
+     "items": [
+      {
+       "id": "iiif/Smith1_letter_91/3/annotation",
+       "type": "Annotation",
+       "motivation": "painting",
+       "target": "iiif/Smith1_letter_91/3/canvas",
+       "body": {
+        "id": "iiif/Smith1_letter_91/3/full/max/0/default.jpg",
+        "type": "Image",
+        "format": "image/jpeg",
+        "width": 1700,
+        "height": 2300,
+        "service": [
+         {
+          "id": "iiif/Smith1_letter_91/3",
+          "type": "ImageService3",
+          "profile": "level0",
+          "width": 1700,
+          "height": 2300,
+          "tiles": [
+           {
+            "width": 512,
+            "scaleFactors": [
+             1,
+             2,
+             4,
+             8
+            ]
+           }
+          ],
+          "sizes": [
+           {
+            "width": 1700,
+            "height": 2300
+           },
+           {
+            "width": 850,
+            "height": 1150
+           },
+           {
+            "width": 425,
+            "height": 575
+           },
+           {
+            "width": 213,
+            "height": 288
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

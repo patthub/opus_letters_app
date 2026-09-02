@@ -1,0 +1,82 @@
+{
+ "@context": "http://iiif.io/api/presentation/3/context.json",
+ "id": "iiif/Smith1_letter_1/manifest.json",
+ "type": "Manifest",
+ "label": {
+  "none": [
+   "Smith1_letter_1"
+  ]
+ },
+ "items": [
+  {
+   "id": "iiif/Smith1_letter_1/1/canvas",
+   "type": "Canvas",
+   "label": {
+    "none": [
+     "01"
+    ]
+   },
+   "width": 1700,
+   "height": 2300,
+   "items": [
+    {
+     "id": "iiif/Smith1_letter_1/1/page",
+     "type": "AnnotationPage",
+     "items": [
+      {
+       "id": "iiif/Smith1_letter_1/1/annotation",
+       "type": "Annotation",
+       "motivation": "painting",
+       "target": "iiif/Smith1_letter_1/1/canvas",
+       "body": {
+        "id": "iiif/Smith1_letter_1/1/full/max/0/default.jpg",
+        "type": "Image",
+        "format": "image/jpeg",
+        "width": 1700,
+        "height": 2300,
+        "service": [
+         {
+          "id": "iiif/Smith1_letter_1/1",
+          "type": "ImageService3",
+          "profile": "level0",
+          "width": 1700,
+          "height": 2300,
+          "tiles": [
+           {
+            "width": 512,
+            "scaleFactors": [
+             1,
+             2,
+             4,
+             8
+            ]
+           }
+          ],
+          "sizes": [
+           {
+            "width": 1700,
+            "height": 2300
+           },
+           {
+            "width": 850,
+            "height": 1150
+           },
+           {
+            "width": 425,
+            "height": 575
+           },
+           {
+            "width": 213,
+            "height": 288
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
