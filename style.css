@@ -20,7 +20,7 @@
   --ink-faint:  #9b9384;
   --accent:     #2c3f9e;   /* ultramaryna */
   --accent-soft:#2c3f9e1c;
-  --rubric:     #a5402d;
+  --alert:      #b3261e;   /* WYLACZNIE bledy: zapytanie sie nie wykonalo, baza nie odpowiada */
 
   --w-rail: 236px;
   --w-sheet: 452px;
@@ -37,10 +37,14 @@
   --c-faint:        #9b9384;
   --c-accent:       #2c3f9e;
   --c-accent-fill:  rgba(44,63,158,.55);
-  --c-mark:         rgba(27,26,23,.74);
-  --c-doubt:        rgba(165,64,45,.4);
+  --c-mark:         rgba(27,26,23,.80);
+  /* Niepewnosc datowania NIE ma juz wlasnego koloru. Ten sam atrament, tylko bledszy:
+     szerokosc znacznika mowi, jak nieostra jest data, jasnosc — czy podal ja redaktor.
+     Dwie wlasciwosci jednej rzeczy zamiast drugiego koloru na stronie. */
+  --c-doubt:        rgba(27,26,23,.40);
   --c-hair:         #00000012;
   --c-hair-2:       #00000022;
+  --c-border:       #1b1a1740;
   --c-spoke:        #1b1a171a;
   --c-sea:          #c7cbda;
   --c-land:         #f0ede6;
@@ -85,7 +89,7 @@ a { color: var(--accent); }
 .prec[data-p="7"]  { width: 10px; }
 .prec[data-p="4"]  { width: 20px; }
 .prec[data-p="0"]  { width: 20px; background: none; border-top: 2px dotted var(--ink-faint); height: 0; }
-.prec.doubt { background: var(--rubric); border-color: var(--rubric); }
+.prec.doubt { background: none; height: 0; border-top: 2px dotted var(--ink-faint); }
 
 /* ── szyna ───────────────────────────────────────────────────────────────── */
 
@@ -194,8 +198,8 @@ a { color: var(--accent); }
   background: var(--accent-soft); color: var(--accent);
   border-radius: 20px; padding: 5px 11px 4px;
 }
-#clear { font: 700 13px/1 var(--sans); color: var(--rubric); padding: 5px 8px; border-radius: 4px; }
-#clear:hover { background: #a5402d1a; }
+#clear { font: 700 13px/1 var(--sans); color: var(--ink-soft); padding: 5px 8px; border-radius: 4px; }
+#clear:hover { background: color-mix(in srgb, var(--wash) 60%, transparent); color: var(--ink); }
 
 #stage { overflow: auto; position: relative; min-height: 0; }
 .pad { padding: 4px 28px 44px; max-width: 1120px; }
@@ -219,7 +223,11 @@ a { color: var(--accent); }
 
 .letter .when { text-align: right; padding-top: 3px; }
 .letter .when time { font: 400 12.5px/1.4 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
-.letter .when time.doubt { color: var(--rubric); }
+.letter .when time.doubt {
+  color: var(--ink-faint);
+  text-decoration: underline dotted var(--ink-faint);
+  text-underline-offset: 3px;
+}
 .letter .who { font: 700 12.5px/1.45 var(--sans); color: var(--ink); }
 .letter .incipit { font: italic 400 17.5px/1.36 var(--serif); margin: 2px 0 0; max-width: 64ch; color: var(--ink); }
 .letter .marked { font: 400 13px/1.45 var(--serif); color: var(--ink-soft); margin-top: 3px; }
@@ -329,7 +337,7 @@ a { color: var(--accent); }
 #qout table { border-collapse: collapse; font: 400 12.5px/1.55 var(--mono); width: 100%; }
 #qout th { text-align: left; font: 700 12px/1 var(--sans); color: var(--ink-soft); padding: 0 16px 9px 0; white-space: nowrap; }
 #qout td { padding: 6px 16px 6px 0; border-top: 1px solid #00000010; vertical-align: top; max-width: 46ch; }
-#qout .err { color: var(--rubric); font: 400 13px/1.65 var(--mono); white-space: pre-wrap; }
+#qout .err { color: var(--alert); font: 400 13px/1.65 var(--mono); white-space: pre-wrap; }
 #qout .node { font: 400 14px/1.4 var(--serif); }
 #qout .node em { font: 400 11px/1 var(--sans); font-style: normal; color: var(--ink-faint); margin-left: 7px; }
 
@@ -342,13 +350,16 @@ body:not(.sheet-open) #sheet { display: none; }
   float: right; margin: -6px -10px 0 0; font: 400 21px/1 var(--sans);
   color: var(--ink-faint); padding: 4px 9px; border-radius: 5px;
 }
-#sheet #close:hover { color: var(--rubric); background: #a5402d17; }
+#sheet #close:hover { color: var(--ink); background: color-mix(in srgb, var(--wash) 70%, transparent); }
 
 /* data tak, jak zapisal ja Wotton — najwazniejsza rzecz na arkuszu */
 #sheet .asmarked { font: 400 27px/1.24 var(--serif); margin: 16px 0 0; max-width: 22ch; }
 #sheet .norm { margin: 10px 0 0; display: flex; align-items: center; gap: 9px; }
 #sheet .norm time { font: 400 12.5px/1 var(--mono); color: var(--ink-soft); }
-#sheet .norm em { font: 700 11.5px/1 var(--sans); font-style: normal; color: var(--rubric); }
+#sheet .norm em {
+  font: 700 11.5px/1 var(--sans); font-style: normal; color: var(--ink-soft);
+  border-bottom: 2px dotted var(--ink-faint); padding-bottom: 2px;
+}
 
 #sheet .quote {
   margin: 22px 0 0; font: italic 400 18px/1.45 var(--serif);
@@ -371,7 +382,7 @@ body:not(.sheet-open) #sheet { display: none; }
 }
 #boot .asmarked { font: 400 clamp(22px, 3.4vw, 40px)/1.25 var(--serif); margin: 0; }
 #boot .label { animation: pulse 1.6s ease-in-out infinite; font-weight: 400; }
-#boot .err { color: var(--rubric); font: 400 13px/1.7 var(--mono); max-width: 52ch; white-space: pre-wrap; }
+#boot .err { color: var(--alert); font: 400 13px/1.7 var(--mono); max-width: 52ch; white-space: pre-wrap; }
 @keyframes pulse { 50% { opacity: .35; } }
 
 /* ── waskie ekrany ───────────────────────────────────────────────────────── */

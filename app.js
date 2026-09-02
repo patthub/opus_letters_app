@@ -10,7 +10,7 @@
 // cienkie proxy z jednym endpointem, baza tylko na 127.0.0.1.
 
 import { T, pickLang } from './i18n.js';
-import { COAST } from './coast.js';
+import { COAST, BORDERS } from './coast.js';
 
 let LANG = pickLang();
 let t = T[LANG];
@@ -671,6 +671,17 @@ function viewPlaces(stage) {
       }
       g.closePath(); g.fill(); g.stroke();
     }
+    g.strokeStyle = c('--c-border'); g.lineWidth = 1;
+    g.setLineDash([3, 3]);
+    for (const r of BORDERS) {
+      g.beginPath();
+      for (let i = 0; i < r.length; i += 2) {
+        const x = X(r[i]), y = Y(r[i + 1]);
+        i ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.stroke();
+    }
+    g.setLineDash([]);
 
     // przy zblizeniu w glab ladu nie ma sie czym orientowac — siatka wspolrzednych
     // pojawia sie dopiero wtedy, kiedy jest potrzebna
