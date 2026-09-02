@@ -7,7 +7,7 @@ export const T = {
     title: 'OPUS — korespondencja Henry’ego Wottona',
     subtitle: 'Korespondencja Henry’ego&nbsp;Wottona',
     nav: { letters: 'Listy', time: 'Czas', people: 'Ludzie', places: 'Miejsca', query: 'Zapytanie' },
-    find: 'szukaj w incipitach, nazwiskach, tematach…',
+    find: 'szukaj w listach…',
     connecting: 'łączę z Neo4j',
 
     tally: { letters: 'listów', people: 'korespondentów', places: 'miejsc', doubt: 'dat niepewnych' },
@@ -78,7 +78,7 @@ export const T = {
     title: 'OPUS — the correspondence of Sir Henry Wotton',
     subtitle: 'The correspondence of Sir&nbsp;Henry&nbsp;Wotton',
     nav: { letters: 'Letters', time: 'Time', people: 'People', places: 'Places', query: 'Query' },
-    find: 'search incipits, names, subjects…',
+    find: 'search the letters…',
     connecting: 'connecting to Neo4j',
 
     tally: { letters: 'letters', people: 'correspondents', places: 'places', doubt: 'uncertain dates' },

@@ -7,17 +7,22 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Archivo:wdth,wght@88..100,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/neo4j-driver-lite@5.28.3/lib/browser/neo4j-lite-web.min.js"></script>
 
 <nav id="rail">
-  <div>
+  <div id="brand">
     <h1>OPUS</h1>
     <p id="subtitle">The correspondence of Sir&nbsp;Henry&nbsp;Wotton<span>1589–1639</span></p>
-    <div id="lang"></div>
   </div>
+
+  <label id="search">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.4 10.4 14 14"/></svg>
+    <input id="find" type="search" placeholder="search…" autocomplete="off">
+    <kbd>/</kbd>
+  </label>
 
   <div id="views">
     <button data-view="letters" aria-current="true">Letters <i></i></button>
@@ -27,15 +32,15 @@
     <button data-view="query">Query <i></i></button>
   </div>
 
-  <div id="src"></div>
-  <div id="tally"></div>
+  <div id="foot">
+    <div id="lang"></div>
+    <div id="src"></div>
+    <div id="tally"></div>
+  </div>
 </nav>
 
 <main id="main">
-  <header id="bar">
-    <span class="label" id="scope"></span>
-    <input id="find" type="search" placeholder="search…" autocomplete="off">
-  </header>
+  <header id="bar"><h2 id="scope"></h2></header>
   <div id="stage"></div>
 </main>
 
