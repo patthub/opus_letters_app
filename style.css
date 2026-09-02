@@ -381,6 +381,49 @@ body:not(.sheet-open) #sheet { display: none; }
 #sheet dd button:hover { text-decoration: underline; }
 #sheet .chips { display: flex; flex-wrap: wrap; gap: 5px; }
 
+/* ── czytnik: skan obok transkrypcji ─────────────────────────────────────── */
+
+#reader {
+  position: fixed; inset: 0; z-index: 20; background: var(--paper);
+  display: grid; grid-template-rows: auto minmax(0, 1fr);
+}
+#reader header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 18px; border-bottom: 1px solid var(--rail-line); background: var(--rail);
+}
+#reader header b { font: 700 14px/1 var(--sans); }
+#reader header .label { font-weight: 400; }
+#reader header nav { margin-left: auto; display: flex; gap: 4px; }
+#reader header nav button, #rclose {
+  font: 400 19px/1 var(--sans); color: var(--ink-soft);
+  padding: 4px 11px; border-radius: 5px;
+}
+#reader header nav button:hover, #rclose:hover { background: var(--wash); color: var(--ink); }
+#rclose { font-size: 21px; }
+
+#rpanes { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+#rimg { min-width: 0; min-height: 0; background: var(--rail); }
+#rimg .openseadragon-canvas { outline: none; }
+#rtext { min-width: 0; min-height: 0; overflow: auto; border-left: 1px solid var(--rail-line); }
+#rtext .pad { padding: 22px 28px 40px; max-width: 62ch; }
+#rtext h3 { margin: 22px 0 8px; font: 700 12.5px/1 var(--sans); color: var(--ink-soft); }
+#rtext h3:first-child { margin-top: 0; }
+#rtext .quote {
+  margin: 0; font: italic 400 17px/1.5 var(--sans);
+  border-left: 2px solid var(--accent); padding-left: 15px;
+}
+#rtext .abs { margin: 0; font: 400 14.5px/1.68 var(--sans); }
+/* transkrypcja: lamana jak w rekopisie, wiec zachowujemy podzial na wiersze */
+#rtext .tr {
+  margin: 0; padding: 22px 28px 40px; max-width: 62ch;
+  font: 400 15px/1.75 var(--sans); white-space: pre-wrap; overflow-wrap: break-word;
+}
+
+@media (max-width: 940px) {
+  #rpanes { grid-template-columns: minmax(0, 1fr); grid-template-rows: 45% minmax(0, 1fr); }
+  #rtext { border-left: none; border-top: 1px solid var(--rail-line); }
+}
+
 /* ── ekran startowy ──────────────────────────────────────────────────────── */
 
 #boot {

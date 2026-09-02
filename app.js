@@ -83,7 +83,12 @@ RETURN l.uri AS id, l.dateCreated AS date, l.dateAsMarked AS marked,
        a.uri AS aid, a.label AS a,
        r.uri AS rid, coalesce(r.label, split(r.uri, '/')[-1]) AS r,
        o.label AS origin, d.label AS dest,
-       [(l)-[:SUBJECT]->(s) | coalesce(s.prefLabel, s.label)] AS subjects
+       [(l)-[:SUBJECT]->(s) | coalesce(s.prefLabel, s.label)] AS subjects,
+       l.iiifManifest AS iiif, l.iiifCanvas AS canvas, l.transcriptText AS text,
+       // uwaga: d jest wyzej zajete przez DESTINATION — wzorzec z tym samym imieniem
+       // zadalby, zeby dokument byl tym samym wezlem co miejsce, czyli zawsze null
+       [(l)-[:HAS_DOCUMENT]->(doc) WHERE doc.documentKind = 'scan' | doc.contentUrl][0] AS scan,
+       [(l)-[:HAS_DOCUMENT]->(doc) WHERE doc.documentKind = 'transcription' | doc.contentUrl][0] AS transcript
 ORDER BY coalesce(l.dateCreated, '9999')`;
 
 // count(DISTINCT x), nie count(*): po OPTIONAL MATCH count(*) liczy wiersz, a nie dopasowanie,
@@ -863,6 +868,8 @@ function drawSheet(id) {
     <p class="norm"><time>${esc(l.date || '—')}</time>${precMark(l)}
       ${flags ? `<em>${esc(flags)}</em>` : ''}</p>
     ${l.incipit ? `<p class="quote">${esc(l.incipit)}</p>` : ''}
+    ${l.iiif || l.scan || l.transcript || l.text
+      ? `<button class="go" id="openscan">${l.iiif || l.scan ? t.openReader : t.openTranscript}</button>` : ''}
     ${l.abstract ? `<h3>${t.abstract}</h3><p class="abs">${esc(l.abstract)}</p>` : ''}
     <h3>${t.record}</h3>
     <dl>
@@ -883,6 +890,8 @@ function drawSheet(id) {
     </div>`;
 
   $('#sheet #close').onclick = closeSheet;
+  const scanBtn = $('#sheet #openscan');
+  if (scanBtn) scanBtn.onclick = () => openReader(l);
   $('#sheet').onclick = e => {
     const p = e.target.closest('[data-person]'), tag = e.target.closest('[data-tag]');
     if (p) { S.person = p.dataset.person; S.view = 'people'; closeSheet(); render(); }
@@ -894,6 +903,111 @@ function closeSheet() {
   S.letter = null;
   document.body.classList.remove('sheet-open');
   if (location.hash.startsWith('#/letter/')) location.hash = '#/' + S.view;
+}
+
+// ── czytnik: skan obok transkrypcji ───────────────────────────────────────────
+// IIIF, bo to standard, w ktorym biblioteki wydaja swoje zbiory: ten sam czytnik obsluzy
+// nasze wlasne skany, manifest z Bodleian czy z British Library, bez pisania czegokolwiek
+// od nowa. Manifest opisuje karty, a serwer obrazu daje kafelki, wiec duze skany dzialaja
+// bez sciagania calego pliku.
+//
+// Obslugujemy Presentation API 2 i 3 — biblioteki wystawiaja i jedno, i drugie.
+function canvasesOf(m) {
+  if (Array.isArray(m.items)) {                                   // IIIF 3
+    return m.items.map(cv => {
+      const body = cv.items?.[0]?.items?.[0]?.body || {};
+      const svc = [].concat(body.service || [])[0] || {};
+      return { label: lab(cv.label), info: svc.id || svc['@id'], img: body.id };
+    });
+  }
+  const seq = m.sequences?.[0]?.canvases || [];                   // IIIF 2
+  return seq.map(cv => {
+    const res = cv.images?.[0]?.resource || {};
+    const svc = [].concat(res.service || [])[0] || {};
+    return { label: lab(cv.label), info: svc['@id'] || svc.id, img: res['@id'] };
+  });
+}
+const lab = v => (typeof v === 'string' ? v
+  : v && typeof v === 'object' ? String(Object.values(v)[0]?.[0] ?? '') : '');
+
+let OSD = null;
+const loadOSD = () => OSD ? Promise.resolve() : new Promise((ok, no) => {
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/5.0.1/openseadragon.min.js';
+  s.onload = () => { OSD = window.OpenSeadragon; ok(); };
+  s.onerror = () => no(new Error('OpenSeadragon'));
+  document.head.append(s);
+});
+
+async function openReader(l) {
+  const box = el('div'); box.id = 'reader';
+  box.innerHTML = `<header>
+      <b>${esc(l.id.split('/').pop())}</b>
+      <span class="label" id="rpage"></span>
+      <nav><button id="rprev" aria-label="poprzednia">‹</button><button id="rnext" aria-label="następna">›</button></nav>
+      <button id="rclose" title="${esc(t.close)}">×</button>
+    </header>
+    <div id="rpanes"><div id="rimg"></div><div id="rtext"></div></div>`;
+  document.body.append(box);
+  const close = () => { box.remove(); removeEventListener('keydown', keys); };
+  const keys = e => {
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') box.querySelector('#rprev').click();
+    if (e.key === 'ArrowRight') box.querySelector('#rnext').click();
+  };
+  addEventListener('keydown', keys);
+  box.querySelector('#rclose').onclick = close;
+
+  // prawa kolumna: tekst listu. Pelna transkrypcja, jesli jest; inaczej to, co mamy.
+  box.querySelector('#rtext').innerHTML = l.text
+    ? `<pre class="tr">${esc(l.text)}</pre>`
+    : `<div class="pad">
+        ${l.incipit ? `<h3>Incipit</h3><p class="quote">${esc(l.incipit)}</p>` : ''}
+        ${l.abstract ? `<h3>${t.abstract}</h3><p class="abs">${esc(l.abstract)}</p>` : ''}
+        <h3>${t.transcription}</h3>
+        <p class="abs">${l.transcript
+          ? `<a href="${esc(l.transcript)}" target="_blank" rel="noopener">${t.openTranscript}</a>`
+          : t.noTranscript}</p></div>`;
+
+  const pane = box.querySelector('#rimg');
+  let sources = [];
+  try {
+    await loadOSD();
+    if (l.iiif) {
+      const m = await (await fetch(l.iiif)).json();
+      const cvs = canvasesOf(m).filter(c => c.info || c.img);
+      sources = cvs.map(c => (c.info ? c.info.replace(/\/$/, '') + '/info.json' : { type: 'image', url: c.img }));
+      box._labels = cvs.map(c => c.label);
+    } else if (l.scan) {
+      sources = [{ type: 'image', url: l.scan }];
+    }
+  } catch (e) {
+    pane.innerHTML = `<div class="pad"><div class="empty"><p>${t.scanFail}</p>
+      <span>${esc(String(e.message || e))}</span></div></div>`;
+    return;
+  }
+  if (!sources.length) {
+    pane.innerHTML = `<div class="pad"><div class="empty"><p>${t.noScan}</p>
+      <span>${t.noScanSub}</span></div></div>`;
+    box.querySelector('#rprev').hidden = box.querySelector('#rnext').hidden = true;
+    return;
+  }
+
+  const start = Math.min(Math.max(Number(l.canvas) || 0, 0), sources.length - 1);
+  const osd = OSD({
+    element: pane, tileSources: sources, sequenceMode: true, initialPage: start,
+    prefixUrl: 'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/5.0.1/images/',
+    showNavigationControl: false, showSequenceControl: false,
+    gestureSettingsMouse: { clickToZoom: false }, visibilityRatio: 1, minZoomImageRatio: .8,
+  });
+  const say = () => {
+    const i = osd.currentPage();
+    box.querySelector('#rpage').textContent =
+      `${t.leaf} ${box._labels?.[i] || i + 1}${sources.length > 1 ? ` / ${sources.length}` : ''}`;
+  };
+  osd.addHandler('page', say); say();
+  box.querySelector('#rprev').onclick = () => osd.goToPage(Math.max(0, osd.currentPage() - 1));
+  box.querySelector('#rnext').onclick = () => osd.goToPage(Math.min(sources.length - 1, osd.currentPage() + 1));
 }
 
 // ── render + router ───────────────────────────────────────────────────────────

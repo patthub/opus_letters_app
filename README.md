@@ -18,6 +18,41 @@ Five ways through the corpus, one letter sheet shared by all of them:
 Interface in English and Polish (`?lang=en` / `?lang=pl`, or the switch in the left rail).
 The letters themselves are never translated: they are sources, not interface.
 
+## Scans and transcriptions
+
+Every letter can open a reader: the scan on the left, the text on the right. The scan is
+served over **IIIF**, the standard libraries publish their holdings in, so the same reader
+handles our own material and a manifest from the Bodleian, the British Library or Internet
+Archive without a line of new code.
+
+Four optional fields per letter, filled in the OPUS spreadsheet:
+
+| column | what it holds |
+|---|---|
+| `iiif_manifest` | URL of a IIIF manifest — ours or someone else's |
+| `iiif_canvas` | which leaf to open on, counting from 0; blank means the first |
+| `transcript_text` | the transcription itself, as text; it appears beside the scan |
+| `scan` | a plain image URL, used only when there is no manifest |
+
+`transcription` (a link to a document) still works and opens in a new tab, but a link cannot
+be shown beside the image — only `transcript_text` can.
+
+### Turning our own scans into IIIF
+
+No image server needed. `tools/make_iiif.py` cuts a folder of scans into static tiles that
+any web host can serve:
+
+```bash
+python3 tools/make_iiif.py ../scans      # scans/<letter_ID>/01.jpg, 02.jpg …
+```
+
+It writes `iiif/<letter_ID>/manifest.json` plus level-0 tiles, and prints the value to put in
+`iiif_manifest`. The output is ordinary IIIF, so Mirador and the Universal Viewer read it too.
+
+A 300 dpi page comes to roughly 2 MB of tiles. GitHub Pages has a soft 1 GB repository limit
+and 100 GB of monthly traffic, so past a few hundred letters the `iiif/` directory belongs on
+separate storage (R2, S3) with absolute URLs in `BASE` at the top of the script.
+
 ## Two data sources, one shape
 
 The page reads either a live **Neo4j** over Bolt, or the frozen `opus.json` that ships with it.
