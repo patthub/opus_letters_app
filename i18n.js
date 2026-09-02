@@ -38,6 +38,7 @@ export const T = {
       'z 526 listów, żaden nie łączy dwóch innych osób. Ta sieć jest gwiazdą i tak ją rysujemy. ' +
       'Kąt = rok pierwszego listu, odległość od środka = częstość. Kliknij osobę.',
     withHub: 'listów z Wottonem', span: 'okres',
+    mapKey: 'pole koła = wszystkie listy związane z miejscem · wypełniony środek = wysłane stąd',
     pickPerson: 'Wybierz korespondenta.',
     sent: 'wysłanych', received: 'otrzymanych', correspondents: 'korespondentów',
     showLetters: 'pokaż te listy',
@@ -109,6 +110,7 @@ export const T = {
       'and is drawn as one. Angle = year of the first letter, distance from the centre = ' +
       'frequency. Click a name.',
     withHub: 'letters with Wotton', span: 'span',
+    mapKey: 'circle area = all letters tied to the place · filled centre = sent from here',
     pickPerson: 'Pick a correspondent.',
     sent: 'sent', received: 'received', correspondents: 'correspondents',
     showLetters: 'show these letters',

@@ -594,7 +594,10 @@ function viewPlaces(stage) {
   const pins = S.places.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon))
     .sort((x, y) => (y.sent + y.got) - (x.sent + x.got));
   if (!pins.length) return;
-  const maxN = Math.max(...pins.map(p => p.sent || p.got));
+  // Pole kola = wszystkie listy zwiazane z miejscem, wiec promien ~ pierwiastek.
+  // Wypelniony srodek = te wyslane stad. Londyn: wielki pierscien, maly srodek (prawie
+  // wszystko przychodzilo); Wenecja: kolo niemal cale wypelnione (prawie wszystko wychodzilo).
+  const RAD = n => Math.sqrt(n) * 1.9;
 
   for (const p of pins) {
     const b = el('button');
@@ -606,7 +609,11 @@ function viewPlaces(stage) {
 
   const profile = () => {
     const p = pins.find(x => x.label === S.place);
-    if (!p) { hint.innerHTML = `<span class="label">${esc(t.legend.zoom)}</span>`; return; }
+    if (!p) {
+      hint.innerHTML = `<span class="label">${esc(t.mapKey)}</span>
+        <span class="label" style="margin-top:7px">${esc(t.legend.zoom)}</span>`;
+      return;
+    }
     const mine = S.letters.filter(l => l.origin === p.label && l.date).map(l => l.date).sort();
     hint.innerHTML = `<p>${esc(p.label)}</p>
       <span class="label">${[
@@ -679,15 +686,18 @@ function viewPlaces(stage) {
 
     spots = pins.map(p => ({
       p, x: X(p.lon), y: Y(p.lat),
-      r: 3.5 + Math.sqrt(p.sent || p.got) * 2.2,
+      r: Math.max(3.2, RAD(p.sent + p.got)),
+      rin: p.sent ? Math.max(1.6, RAD(p.sent)) : 0,
       on: p.label === S.place,
     }));
     for (const s of spots) {
-      g.beginPath(); g.arc(s.x, s.y, s.on ? s.r + 1.5 : s.r, 0, 7);
-      if (s.p.sent) { g.fillStyle = s.on ? '#1e2628' : 'rgba(29,95,88,.62)'; g.fill(); }
+      if (s.rin) {
+        g.fillStyle = s.on ? '#1e2628' : 'rgba(29,95,88,.58)';
+        g.beginPath(); g.arc(s.x, s.y, Math.min(s.rin, s.r), 0, 7); g.fill();
+      }
       g.strokeStyle = s.on ? '#1e2628' : '#1d5f58';
-      g.lineWidth = s.on ? 1.8 : s.p.sent ? 1 : 1.4;
-      g.stroke();
+      g.lineWidth = s.on ? 2 : 1.1;
+      g.beginPath(); g.arc(s.x, s.y, s.r, 0, 7); g.stroke();
     }
 
     // przy przyblizeniu jest miejsce na wiecej nazw; zawsze podpisujemy wybrane
@@ -734,7 +744,7 @@ function viewPlaces(stage) {
     const s = at(e.offsetX, e.offsetY);
     cv.style.cursor = s ? 'pointer' : 'grab';
     cv.title = s ? [s.p.label, [s.p.sent && t.sentFrom(s.p.sent), s.p.got && t.arrived(s.p.got)]
-      .filter(Boolean).join(' · ')].join('\n') : '';
+      .filter(Boolean).join(' · ')].filter(Boolean).join('\n') : '';
   };
   cv.onclick = e => {
     if (moved > 3) return;
