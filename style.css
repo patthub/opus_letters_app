@@ -7,8 +7,9 @@
 
    Czerwien rubrykowa ma tu JEDNO zadanie: oznaczac niepewnosc datowania. Nigdy dekoracyjnie.
 
-   Lato niesie caly interfejs. Serif zostal tylko tam, gdzie na ekranie sa slowa samych listow
-   — incipit, data zapisana reka Wottona, streszczenie. Mono trzyma dane w kolumnach. */
+   Jeden krój na wszystko: Lato. Slowa samych listow — incipit, data zapisana reka Wottona,
+   streszczenie — odrozniaja sie kursywa, stopniem i lekkoscia (Lato 300), a nie osobna rodzina.
+   Mono trzyma dane w kolumnach. */
 
 :root {
   --paper:      #eae7e0;   /* kamien: jasny, zeby dalo sie czytac dlugo */
@@ -26,7 +27,6 @@
   --w-sheet: 452px;
 
   --sans:  "Lato", system-ui, -apple-system, sans-serif;
-  --serif: "EB Garamond", Georgia, serif;
   --mono:  "IBM Plex Mono", ui-monospace, Menlo, monospace;
 
   /* Kanwy (os czasu, gwiazda, mapa) czytaja stad — paleta ma jedno miejsce, nie dwa. */
@@ -229,8 +229,8 @@ a { color: var(--accent); }
   text-underline-offset: 3px;
 }
 .letter .who { font: 700 12.5px/1.45 var(--sans); color: var(--ink); }
-.letter .incipit { font: italic 400 17.5px/1.36 var(--serif); margin: 2px 0 0; max-width: 64ch; color: var(--ink); }
-.letter .marked { font: 400 13px/1.45 var(--serif); color: var(--ink-soft); margin-top: 3px; }
+.letter .incipit { font: italic 400 16px/1.45 var(--sans); margin: 3px 0 0; max-width: 62ch; color: var(--ink); }
+.letter .marked { font: 300 13.5px/1.45 var(--sans); color: var(--ink-soft); margin-top: 4px; }
 .letter .tags { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 5px; }
 
 .tag {
@@ -309,7 +309,7 @@ a { color: var(--accent); }
   background: color-mix(in srgb, var(--paper) 91%, transparent); border-radius: 8px; padding: 14px 18px 16px;
 }
 #mapwrap #egohint { background: color-mix(in srgb, var(--paper) 92%, transparent); }
-#egohint p { margin: 0 0 6px; font: 700 20px/1.2 var(--sans); }
+#egohint p { margin: 0 0 6px; font: 700 19px/1.25 var(--sans); }
 #egohint .label { display: block; font-weight: 400; line-height: 1.6; }
 
 /* ── zapytanie ───────────────────────────────────────────────────────────── */
@@ -338,7 +338,7 @@ a { color: var(--accent); }
 #qout th { text-align: left; font: 700 12px/1 var(--sans); color: var(--ink-soft); padding: 0 16px 9px 0; white-space: nowrap; }
 #qout td { padding: 6px 16px 6px 0; border-top: 1px solid #00000010; vertical-align: top; max-width: 46ch; }
 #qout .err { color: var(--alert); font: 400 13px/1.65 var(--mono); white-space: pre-wrap; }
-#qout .node { font: 400 14px/1.4 var(--serif); }
+#qout .node { font: 400 13.5px/1.4 var(--sans); }
 #qout .node em { font: 400 11px/1 var(--sans); font-style: normal; color: var(--ink-faint); margin-left: 7px; }
 
 /* ── arkusz listu ────────────────────────────────────────────────────────── */
@@ -353,7 +353,7 @@ body:not(.sheet-open) #sheet { display: none; }
 #sheet #close:hover { color: var(--ink); background: color-mix(in srgb, var(--wash) 70%, transparent); }
 
 /* data tak, jak zapisal ja Wotton — najwazniejsza rzecz na arkuszu */
-#sheet .asmarked { font: 400 27px/1.24 var(--serif); margin: 16px 0 0; max-width: 22ch; }
+#sheet .asmarked { font: 300 27px/1.3 var(--sans); letter-spacing: -.01em; margin: 16px 0 0; max-width: 24ch; }
 #sheet .norm { margin: 10px 0 0; display: flex; align-items: center; gap: 9px; }
 #sheet .norm time { font: 400 12.5px/1 var(--mono); color: var(--ink-soft); }
 #sheet .norm em {
@@ -362,11 +362,11 @@ body:not(.sheet-open) #sheet { display: none; }
 }
 
 #sheet .quote {
-  margin: 22px 0 0; font: italic 400 18px/1.45 var(--serif);
+  margin: 22px 0 0; font: italic 400 17px/1.5 var(--sans);
   border-left: 2px solid #00000017; padding-left: 15px;
 }
 #sheet h3 { margin: 27px 0 9px; font: 700 12.5px/1 var(--sans); color: var(--ink-soft); }
-#sheet p.abs { margin: 0; font: 400 15px/1.62 var(--serif); }
+#sheet p.abs { margin: 0; font: 400 14.5px/1.68 var(--sans); max-width: 60ch; }
 #sheet dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 18px; margin: 0; }
 #sheet dt { font: 400 13px/1.5 var(--sans); color: var(--ink-faint); }
 #sheet dd { margin: 0; font: 400 14.5px/1.5 var(--sans); }
@@ -380,7 +380,7 @@ body:not(.sheet-open) #sheet { display: none; }
   position: fixed; inset: 0; background: var(--paper); z-index: 9;
   display: grid; place-content: center; text-align: center; gap: 12px;
 }
-#boot .asmarked { font: 400 clamp(22px, 3.4vw, 40px)/1.25 var(--serif); margin: 0; }
+#boot .asmarked { font: 300 clamp(22px, 3.4vw, 38px)/1.3 var(--sans); letter-spacing: -.01em; margin: 0; }
 #boot .label { animation: pulse 1.6s ease-in-out infinite; font-weight: 400; }
 #boot .err { color: var(--alert); font: 400 13px/1.7 var(--mono); max-width: 52ch; white-space: pre-wrap; }
 @keyframes pulse { 50% { opacity: .35; } }
