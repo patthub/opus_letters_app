@@ -26,12 +26,19 @@
   --w-rail: 236px;
   --w-sheet: 452px;
 
-  --sans:  "Lato", system-ui, -apple-system, sans-serif;
-  --mono:  "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* Google serwuje Lato tylko w podzbiorach latin i latin-ext — nie ma w nim ani Ↄ (U+2183,
+     archaiczna cyfra rzymska z zapisu apostrophus, ktorym Wotton datowal listy z Rzymu:
+     CIↃIↃXXCIX = 1589), ani nawiasow redaktorskich ⟨ ⟩ (U+27E8/9), a tych jest w korpusie 228.
+     Bez tego przegladarka bierze je z przypadkowego fontu systemowego i w srodku wyrazu widac
+     inna grubosc. "Noto Sans Symbols 2" stoi w stosie zaraz za Lato i ma unicode-range, wiec
+     schodzi tylko maleńki podzbior i tylko gdy taki znak wystapi. Prawdziwe znaki zostaja
+     w DOM-ie, wiec cytat skopiowany do schowka jest poprawny. */
+  --sans:  "Lato", "Noto Sans Symbols 2", system-ui, -apple-system, sans-serif;
+  --mono:  "IBM Plex Mono", "Noto Sans Symbols 2", ui-monospace, Menlo, monospace;
 
   /* Kanwy (os czasu, gwiazda, mapa) czytaja stad — paleta ma jedno miejsce, nie dwa. */
-  --face-ui:   Lato, sans-serif;
-  --face-mono: "IBM Plex Mono", monospace;
+  --face-ui:   Lato, "Noto Sans Symbols 2", sans-serif;
+  --face-mono: "IBM Plex Mono", "Noto Sans Symbols 2", monospace;
   --c-ink:          #1b1a17;
   --c-ink-2:        #1b1a17b3;
   --c-faint:        #9b9384;
