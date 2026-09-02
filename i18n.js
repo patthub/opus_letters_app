@@ -26,12 +26,18 @@ export const T = {
     legend: {
       day: 'znany dzień', month: 'tylko miesiąc', year: 'tylko rok',
       editorial: 'data od redaktora — wywnioskowana, niepewna lub przybliżona',
+      zoom: 'kółko myszy przybliża · przeciągnij, żeby przesunąć · dwuklik wraca do całości',
     },
+    resetZoom: 'cała oś',
     nothingDated: 'Nic z datą.',
     nothingDatedSub: 'Zdejmij filtr, żeby zobaczyć całą oś.',
     nowhere: 'bez miejsca',
     placeUnknown: 'miejsce nieznane',
 
+    starNote: 'Cały korpus to jeden zbiór listów: Wotton stoi po którejś ze stron każdego ' +
+      'z 526 listów, żaden nie łączy dwóch innych osób. Ta sieć jest gwiazdą i tak ją rysujemy. ' +
+      'Kąt = rok pierwszego listu, odległość od środka = częstość. Kliknij osobę.',
+    withHub: 'listów z Wottonem', span: 'okres',
     pickPerson: 'Wybierz korespondenta.',
     sent: 'wysłanych', received: 'otrzymanych', correspondents: 'korespondentów',
     showLetters: 'pokaż te listy',
@@ -90,12 +96,19 @@ export const T = {
     legend: {
       day: 'day known', month: 'month only', year: 'year only',
       editorial: 'date supplied by the editor — inferred, uncertain or approximate',
+      zoom: 'scroll to zoom · drag to pan · double-click for the whole span',
     },
+    resetZoom: 'whole span',
     nothingDated: 'Nothing dated.',
     nothingDatedSub: 'Drop the filter to see the whole span.',
     nowhere: 'no place given',
     placeUnknown: 'place unknown',
 
+    starNote: 'The whole corpus is one man’s letterbook: Wotton stands on one side of every ' +
+      'one of the 526 letters, and none of them joins two other people. This network is a star ' +
+      'and is drawn as one. Angle = year of the first letter, distance from the centre = ' +
+      'frequency. Click a name.',
+    withHub: 'letters with Wotton', span: 'span',
     pickPerson: 'Pick a correspondent.',
     sent: 'sent', received: 'received', correspondents: 'correspondents',
     showLetters: 'show these letters',

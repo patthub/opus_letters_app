@@ -280,7 +280,8 @@ function viewTime(stage, scope) {
     ['<i class="prec" data-p="7"></i>', t.legend.month],
     ['<i class="prec" data-p="4"></i>', t.legend.year],
     ['<i class="prec doubt" data-p="7"></i>', t.legend.editorial],
-  ].map(([m, s]) => `<div>${m}<span>${esc(s)}</span></div>`).join('');
+  ].map(([m, s]) => `<div>${m}<span>${esc(s)}</span></div>`).join('')
+    + `<div><span>${esc(t.legend.zoom)}</span></div>`;
   box.append(cv, legend);
   stage.append(box);
 
@@ -308,8 +309,18 @@ function viewTime(stage, scope) {
 
   const M = { l: 132, r: 30, t: 20, b: 32 };
   let W, H, rowH, marks = [], anim = 0, raf;
+  // Wenecja 1604–1610 to lity blok — bez przyblizania nie da sie w nim niczego wskazac.
+  // Zoom tylko w poziomie: pasow jest 35 i mieszcza sie zawsze, gesty jest czas.
+  let v0 = A, v1 = B;
+  const SPAN_MIN = 864e5 * 40;
 
-  const X = ms => M.l + (ms - A) / (B - A) * (W - M.l - M.r);
+  const X = ms => M.l + (ms - v0) / (v1 - v0) * (W - M.l - M.r);
+  const unX = px => v0 + (px - M.l) / (W - M.l - M.r) * (v1 - v0);
+  const clampView = () => {
+    if (v1 - v0 > B - A) { v0 = A; v1 = B; return; }
+    if (v0 < A) { v1 += A - v0; v0 = A; }
+    if (v1 > B) { v0 -= v1 - B; v1 = B; }
+  };
   const layout = () => {
     rowH = (H - M.t - M.b) / lanes.length;
     const h = Math.max(3, Math.min(rowH - 3, 11));
@@ -325,18 +336,35 @@ function viewTime(stage, scope) {
     g.clearRect(0, 0, W, H);
 
     g.font = '500 10px Archivo, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    for (let y = 1590; y <= new Date(B).getUTCFullYear(); y += 5) {
+    const years = (v1 - v0) / 3.156e10;
+    const step = years > 60 ? 10 : years > 25 ? 5 : years > 10 ? 2 : 1;
+    const y0 = new Date(v0).getUTCFullYear(), y1 = new Date(v1).getUTCFullYear() + 1;
+    for (let y = Math.floor(y0 / step) * step; y <= y1; y += step) {
       const x = X(Date.UTC(y, 0, 1));
-      g.strokeStyle = y % 10 ? '#0000000d' : '#00000018';
+      if (x < M.l - 1 || x > W - M.r + 1) continue;
+      g.strokeStyle = '#00000018';
       g.beginPath(); g.moveTo(x, M.t - 6); g.lineTo(x, H - M.b); g.stroke();
-      if (!(y % 10)) { g.fillStyle = '#93a0a0'; g.fillText(y, x, H - M.b + 16); }
+      g.fillStyle = '#93a0a0'; g.fillText(y, x, H - M.b + 16);
+    }
+    if (years < 3.2) {                       // dopiero tu miesiace maja sens
+      const MON = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+      for (let y = y0; y <= y1; y++) for (let m = 1; m < 12; m++) {
+        const x = X(Date.UTC(y, m, 1));
+        if (x < M.l || x > W - M.r) continue;
+        g.strokeStyle = '#0000000d';
+        g.beginPath(); g.moveTo(x, M.t - 2); g.lineTo(x, H - M.b); g.stroke();
+        // liczby rzymskie, bo tak numerowano miesiace w tych listach
+        if (years < 1.6) { g.fillStyle = '#b3bcbc'; g.fillText(MON[m], x, H - M.b + 16); }
+      }
     }
 
     g.textBaseline = 'middle';
     for (const lane of lanes) {
       const y = M.t + lane.i * rowH + rowH / 2;
       g.strokeStyle = '#00000012'; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(X(lane.first), y); g.lineTo(X(lane.last), y); g.stroke();
+      g.beginPath();
+      g.moveTo(Math.max(X(lane.first), M.l), y); g.lineTo(Math.min(X(lane.last), W - M.r), y);
+      g.stroke();
       g.textAlign = 'right';
       g.fillStyle = lane.n > 3 ? '#1e2628' : '#93a0a0';
       g.font = `400 ${Math.min(13, Math.max(9, rowH * .62))}px "EB Garamond", Georgia, serif`;
@@ -350,12 +378,15 @@ function viewTime(stage, scope) {
     // 323 z 526 dat maja zastrzezenie redaktora — czerwien musi byc cicha, inaczej
     // caly wykres krzyczy. Ton, nie alarm.
     const cut = M.l + anim * (W - M.l - M.r);
+    g.save();
+    g.beginPath(); g.rect(M.l, 0, W - M.l - M.r, H); g.clip();
     for (const m of marks) {
-      if (m.a > cut) continue;
+      if (m.a > cut || m.b < M.l || m.a > W - M.r) continue;
       g.fillStyle = S.letter === m.l.id ? '#1d5f58'
                   : doubt(m.l) ? 'rgba(156,58,44,.46)' : 'rgba(30,38,40,.62)';
-      g.fillRect(m.a, m.y, Math.min(m.b, cut) - m.a, m.h);
+      g.fillRect(m.a, m.y, Math.max(Math.min(m.b, cut) - m.a, .8), m.h);
     }
+    g.restore();
   };
   const resize = () => {
     const dpr = devicePixelRatio || 1;
@@ -366,11 +397,48 @@ function viewTime(stage, scope) {
   };
 
   const hit = (x, y) => marks.find(m => x >= m.a - 2 && x <= m.b + 2 && y >= m.y - 2 && y <= m.y + m.h + 2);
-  cv.onclick = e => { const m = hit(e.offsetX, e.offsetY); if (m) openLetter(m.l.id); };
+  let drag = null, moved = 0;
+
+  cv.onwheel = e => {
+    e.preventDefault();
+    const at = unX(e.offsetX);
+    const k = Math.exp(e.deltaY * 0.0016);
+    let span = Math.min(B - A, Math.max(SPAN_MIN, (v1 - v0) * k));
+    const f = Math.min(1, Math.max(0, (at - v0) / (v1 - v0)));
+    v0 = at - span * f; v1 = v0 + span;
+    clampView(); layout(); paint(); zoomUI();
+  };
+  cv.onmousedown = e => { drag = { x: e.offsetX, v0, v1 }; moved = 0; };
+  addEventListener('mouseup', () => { drag = null; });
   cv.onmousemove = e => {
+    if (drag) {
+      const d = (drag.x - e.offsetX) / (W - M.l - M.r) * (drag.v1 - drag.v0);
+      moved = Math.max(moved, Math.abs(drag.x - e.offsetX));
+      v0 = drag.v0 + d; v1 = drag.v1 + d;
+      clampView(); layout(); paint();
+      cv.style.cursor = 'grabbing';
+      return;
+    }
     const m = hit(e.offsetX, e.offsetY);
     cv.title = m ? [m.l.marked || m.l.date, `${m.l.a} → ${m.l.r}`, m.l.origin || t.placeUnknown].join('\n') : '';
-    cv.style.cursor = m ? 'pointer' : 'crosshair';
+    cv.style.cursor = m ? 'pointer' : 'grab';
+  };
+  cv.onclick = e => {
+    if (moved > 3) return;                   // przeciagniecie, nie klikniecie
+    const m = hit(e.offsetX, e.offsetY);
+    if (m) openLetter(m.l.id);
+  };
+  cv.ondblclick = () => { v0 = A; v1 = B; layout(); paint(); zoomUI(); };
+
+  const zoomUI = () => {
+    const on = v1 - v0 < (B - A) - 1;
+    let btn = legend.querySelector('.go');
+    if (on && !btn) {
+      btn = el('button', 'go', t.resetZoom);
+      btn.onclick = () => { v0 = A; v1 = B; layout(); paint(); zoomUI(); };
+      legend.append(btn);
+    } else if (!on && btn) btn.remove();
+    else if (btn) btn.textContent = t.resetZoom;
   };
 
   const ro = new ResizeObserver(resize); ro.observe(cv);
@@ -385,16 +453,19 @@ function viewTime(stage, scope) {
 }
 
 // ── widok: ludzie ─────────────────────────────────────────────────────────────
-// Uklad promienisty, nie silowy: kat = rok pierwszego listu od tej osoby (pierscien jest
-// zegarem 1589→1639), odleglosc od srodka = jak rzadko pisali. Deterministyczny, wiec
-// za kazdym razem ten sam obrazek.
+// Ten korpus nie jest siecia, tylko GWIAZDA: przy kazdym z 526 listow stoi Wotton po
+// jednej ze stron, zaden list nie laczy dwoch innych osob, a na 71 osob dokladnie jedna
+// (on) ma wiecej niz jednego partnera. Rysowanie "otoczenia" wybranej osoby dawaloby
+// wiec jedna krawedz. Rysujemy zawsze cala gwiazde i podswietlamy wybranego promienia.
+// Kat = rok pierwszego listu (pierscien jest zegarem 1589→1639), odleglosc od srodka
+// = czestosc. Deterministyczne, wiec za kazdym razem ten sam obrazek.
 
 function viewPeople(stage) {
   const box = el('div'); box.id = 'ludzie';
   const roster = el('div'); roster.id = 'roster';
   const ego = el('div'); ego.id = 'ego';
   const cv = el('canvas');
-  const hint = el('div', null, `<p>${t.pickPerson}</p>`); hint.id = 'egohint';
+  const hint = el('div'); hint.id = 'egohint';
   ego.append(cv, hint);
   box.append(roster, ego);
   stage.append(box);
@@ -407,20 +478,31 @@ function viewPeople(stage) {
     roster.append(b);
   }
 
-  const me = S.person && S.people.get(S.person);
-  if (!me) { cv.style.display = 'none'; return; }
-  const rec = S.rec.get(me.id);
-  hint.innerHTML = `<p>${esc(me.name)}</p>
-    <span class="label">${[
-      rec?.birthDate && `${rec.birthDate}–${rec.deathDate || ''}`,
-      `${me.sent} ${t.sent}`, `${me.got} ${t.received}`, `${me.with.size} ${t.correspondents}`,
-    ].filter(Boolean).map(esc).join(' · ')}</span>
-    <button class="go">${t.showLetters}</button>`;
-  hint.querySelector('.go').onclick = () => { location.hash = '#/letters'; };
+  const hub = S.people.get(S.dominant);
+  if (!hub) return;
+
+  const profile = () => {
+    const me = S.person && S.people.get(S.person);
+    if (!me || me.id === hub.id) {
+      hint.innerHTML = `<p>${esc(hub.name)}</p><span class="label">${esc(t.starNote)}</span>`;
+      return;
+    }
+    const rec = S.rec.get(me.id);
+    const mine = S.letters.filter(l => (l.aid === me.id || l.rid === me.id) && l.date).map(l => l.date);
+    hint.innerHTML = `<p>${esc(me.name)}</p>
+      <span class="label">${[
+        rec?.birthDate && `${rec.birthDate}–${rec.deathDate || ''}`,
+        rec?.jobTitle,
+        `${me.sent + me.got} ${t.withHub}`,
+        mine.length && `${t.span} ${mine[0].slice(0, 4)}–${mine[mine.length - 1].slice(0, 4)}`,
+      ].filter(Boolean).map(esc).join(' · ')}</span>
+      <button class="go">${t.showLetters}</button>`;
+    hint.querySelector('.go').onclick = () => { location.hash = '#/letters'; };
+  };
 
   const dated = S.letters.filter(l => l.date);
   const A = Math.min(...dated.map(l => t0(l.date))), B = Math.max(...dated.map(l => t0(l.date)));
-  const partners = [...me.with].map(([id, n]) => ({ p: S.people.get(id), n }))
+  const partners = [...hub.with].map(([id, n]) => ({ p: S.people.get(id), n }))
     .filter(x => x.p).sort((a, b) => b.n - a.n);
   const maxN = Math.max(...partners.map(x => x.n), 1);
 
@@ -450,28 +532,43 @@ function viewPeople(stage) {
     const pos = partners.map(({ p, n }) => {
       const ang = ((p.first - A) / (B - A || 1)) * Math.PI * 2 - Math.PI / 2;
       const r = R * (1 - .55 * Math.sqrt(n / maxN));
-      return { p, n, x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r };
+      return { p, n, on: p.id === S.person, x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r };
     });
     for (const q of pos) {
-      g.strokeStyle = '#1e26281f'; g.lineWidth = Math.min(3, .5 + q.n / maxN * 2.5);
+      g.strokeStyle = q.on ? '#1d5f58' : '#1e26281a';
+      g.lineWidth = q.on ? 1.6 : Math.min(3, .5 + q.n / maxN * 2.5);
       g.beginPath(); g.moveTo(cx, cy); g.lineTo(q.x, q.y); g.stroke();
     }
     for (const q of pos) {
       const rr = 2.5 + Math.sqrt(q.n) * 1.6;
-      g.fillStyle = '#1d5f58'; g.beginPath(); g.arc(q.x, q.y, rr, 0, 7); g.fill();
-      if (q.n >= maxN * .12 || partners.length < 22) {
-        g.fillStyle = '#1e2628'; g.font = '400 13px "EB Garamond", Georgia, serif';
+      // czerwien rubrykowa znaczy w tym serwisie WYLACZNIE niepewna date — wybor
+      // zaznaczamy atramentem, nie nia
+      g.fillStyle = q.on ? '#1e2628' : '#1d5f58';
+      g.beginPath(); g.arc(q.x, q.y, q.on ? rr + 1.5 : rr, 0, 7); g.fill();
+      if (q.on || q.n >= maxN * .12 || partners.length < 22) {
+        g.fillStyle = q.on ? '#1e2628' : '#1e2628b3';
+        g.font = `400 13px "EB Garamond", Georgia, serif`;
         g.textAlign = q.x < cx ? 'right' : 'left'; g.textBaseline = 'middle';
         g.fillText(q.p.name, q.x + (q.x < cx ? -rr - 6 : rr + 6), q.y);
       }
     }
     g.fillStyle = '#1e2628'; g.beginPath(); g.arc(cx, cy, 5, 0, 7); g.fill();
+    g.fillStyle = '#1e2628'; g.font = '400 14px "EB Garamond", Georgia, serif';
+    g.textAlign = 'center'; g.textBaseline = 'top';
+    g.fillText(hub.name, cx, cy + 11);
     cv._pos = pos;
   };
   cv.onclick = e => {
     const q = (cv._pos || []).find(q => Math.hypot(q.x - e.offsetX, q.y - e.offsetY) < 14);
-    if (q) { S.person = q.p.id; render(); }
+    if (q) { S.person = q.p.id === S.person ? null : q.p.id; render(); }
   };
+  cv.onmousemove = e => {
+    const q = (cv._pos || []).find(q => Math.hypot(q.x - e.offsetX, q.y - e.offsetY) < 14);
+    cv.style.cursor = q ? 'pointer' : 'default';
+    cv.title = q ? `${q.p.name} — ${q.n}` : '';
+  };
+
+  profile();
   const ro = new ResizeObserver(paint); ro.observe(cv);
   stage._cleanup = () => ro.disconnect();
 }
