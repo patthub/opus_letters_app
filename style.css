@@ -292,7 +292,7 @@ a { color: var(--accent); }
 
 /* ── ludzie i miejsca ────────────────────────────────────────────────────── */
 
-#ludzie, #mapa {
+#ludzie, #mapa, #siec {
   display: grid; grid-template-columns: 274px minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr); height: 100%; min-width: 0;
 }
@@ -308,14 +308,14 @@ a { color: var(--accent); }
 #roster button[aria-current="true"] .nm { font-weight: 700; }
 #roster .ct { font: 400 11.5px/1.4 var(--mono); color: var(--ink-faint); }
 
-#ego, #mapwrap { position: relative; min-width: 0; min-height: 0; }
-#ego canvas, #mapwrap canvas { display: block; width: 100%; height: 100%; }
+#ego, #mapwrap, #netwrap { position: relative; min-width: 0; min-height: 0; }
+#ego canvas, #mapwrap canvas, #netwrap canvas { display: block; width: 100%; height: 100%; }
 
 #egohint {
   position: absolute; left: 26px; bottom: 22px; max-width: 40ch;
   background: color-mix(in srgb, var(--paper) 91%, transparent); border-radius: 8px; padding: 14px 18px 16px;
 }
-#mapwrap #egohint { background: color-mix(in srgb, var(--paper) 92%, transparent); }
+#mapwrap #egohint, #netwrap #egohint { background: color-mix(in srgb, var(--paper) 92%, transparent); }
 #egohint p { margin: 0 0 6px; font: 700 19px/1.25 var(--sans); }
 #egohint .label { display: block; font-weight: 400; line-height: 1.6; }
 
@@ -447,7 +447,7 @@ body:not(.sheet-open) #sheet { display: none; }
   #views button { width: auto; flex: none; }
   #foot { display: none; }
   #sheet { position: fixed; inset: 0; z-index: 8; }
-  #ludzie, #mapa { grid-template-columns: minmax(0, 1fr); grid-template-rows: 200px minmax(0, 1fr); }
+  #ludzie, #mapa, #siec { grid-template-columns: minmax(0, 1fr); grid-template-rows: 200px minmax(0, 1fr); }
   #roster { border-right: none; border-bottom: 1px solid #00000014; }
   .letter { grid-template-columns: 84px minmax(0, 1fr); gap: 0 14px; }
 }

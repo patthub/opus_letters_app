@@ -51,7 +51,7 @@ const dl = pairs => '<dl>' + pairs.filter(([, v]) => v != null && v !== '')
 
 const S = {
   letters: [], places: [], people: new Map(), rec: new Map(),
-  view: 'letters', find: '', tag: null, person: null, place: null, letter: null, shown: 80,
+  view: 'letters', find: '', tag: null, person: null, place: null, net: null, mention: null, letter: null, shown: 80,
 };
 
 // ── daty ──────────────────────────────────────────────────────────────────────
@@ -228,6 +228,7 @@ function inScope() {
     if (S.tag && !l.subjects.includes(S.tag)) return false;
     if (S.place && l.origin !== S.place && l.dest !== S.place) return false;
     if (S.person && l.aid !== S.person && l.rid !== S.person) return false;
+    if (S.mention && !S.mention.ids.has(l.id)) return false;
     if (!q) return true;
     return [l.incipit, l.a, l.r, l.marked, l.origin, l.dest, ...l.subjects]
       .some(v => v && String(v).toLowerCase().includes(q));
@@ -784,6 +785,177 @@ function viewPlaces(stage) {
   stage._cleanup = () => ro.disconnect();
 }
 
+// ── widok: siec wzmianek ──────────────────────────────────────────────────────
+// Druga siec korpusu, ta prawdziwa: dwa byty lacza sie, jesli pada w tym samym liscie.
+// Uklad 3D liczy Blender (SciGraphs, ForceAtlas2 LinLog, export_comentions.py +
+// render_comentions.py) i zapisuje w net3d.json; tu tylko obracamy go na tej samej
+// kanwie 2D co reszta serwisu — bez WebGL, wiec podpisy sa w Lato i zrzut ekranu dziala.
+// Uczciwosc: wzmianki ma 86 z 526 listow, a krawedz = para obecna w min. 2 listach.
+
+async function viewNet(stage) {
+  const box = el('div'); box.id = 'siec';
+  const roster = el('div'); roster.id = 'roster';
+  const wrap = el('div'); wrap.id = 'netwrap';
+  const cv = el('canvas');
+  const hint = el('div'); hint.id = 'egohint';
+  wrap.append(cv, hint);
+  box.append(roster, wrap);
+  stage.append(box);
+
+  S.net3d ??= await fetch('net3d.json').then(r => r.json()).catch(() => null);
+  const G = S.net3d;
+  if (!G || !box.isConnected) return;
+  const N = G.nodes;
+  const nb = N.map(() => []);
+  for (const [a, b, w] of G.edges) { nb[a].push([b, w]); nb[b].push([a, w]); }
+  const sel = () => N.findIndex(n => n.id === S.net);
+
+  for (const [i, n] of [...N.entries()].sort((a, b) => b[1].n - a[1].n)) {
+    const b = el('button');
+    b.setAttribute('aria-current', String(S.net === n.id));
+    b.innerHTML = `<span class="nm">${esc(n.label)}</span><span class="ct">${n.n}</span>`;
+    b.onclick = () => { S.net = S.net === n.id ? null : n.id; render(); };
+    b.dataset.i = i;
+    roster.append(b);
+  }
+
+  const profile = () => {
+    const i = sel();
+    if (i < 0) {
+      hint.innerHTML = `<p>${esc(t.netTitle)}</p><span class="label">${esc(t.netNote)}</span>
+        <span class="label" style="margin-top:7px">${esc(t.netKey)}</span>
+        <span class="label" style="margin-top:7px">${esc(t.netControls)}</span>`;
+      return;
+    }
+    const n = N[i];
+    const top = [...nb[i]].sort((a, b) => b[1] - a[1]).slice(0, 6);
+    hint.innerHTML = `<p>${esc(n.label)}</p>
+      <span class="label">${[t.kind[n.kind], t.netLetters(n.n),
+        `${t.span} ${n.y0}${n.y1 !== n.y0 ? '–' + n.y1 : ''}`].map(esc).join(' · ')}</span>
+      <span class="label" style="margin-top:7px">${esc(t.netWith)}: ${
+        top.map(([j, w]) => `<a href="#" data-j="${j}">${esc(N[j].label)}</a> ${w}`).join(', ')}</span>
+      <button class="go">${t.showLetters}</button>`;
+    hint.querySelectorAll('[data-j]').forEach(a => a.onclick = e => {
+      e.preventDefault(); S.net = N[+a.dataset.j].id; render();
+    });
+    // po ID listow, nie po nazwie: scalone dublety maja w listach inna etykiete niz tu
+    hint.querySelector('.go').onclick = () => {
+      S.mention = { label: n.label.split('|')[0], ids: new Set(n.ids.map(x => BASE + 'letter/' + x)) };
+      location.hash = '#/letters';
+    };
+  };
+
+  const HOME = { yaw: .6, pitch: .32, zoom: 1 };
+  let { yaw, pitch, zoom } = HOME, W = 0, H = 0, spots = [], raf = 0, spin = true;
+  const maxN = Math.max(...N.map(n => n.n));
+
+  const paint = () => {
+    const dpr = devicePixelRatio || 1;
+    W = cv.clientWidth; H = cv.clientHeight;
+    if (!W || !H) return;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+
+    const cy_ = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const R = Math.min(W, H) * .42 * zoom, D = 3.2;
+    spots = N.map(({ p: [x, y, z] }, i) => {
+      const x1 = x * cy_ + z * sy, z1 = -x * sy + z * cy_;
+      const y2 = y * cp - z1 * sp, z2 = y * sp + z1 * cp;
+      const s = D / (D - z2);                           // lagodna perspektywa
+      return { i, x: W / 2 + x1 * R * s, y: H / 2 - y2 * R * s, z: z2, s };
+    });
+    const at = i => spots[i];
+    const on = sel();
+    const hot = new Set(on < 0 ? [] : [on, ...nb[on].map(([j]) => j)]);
+    const fog = z => .25 + .75 * (z + 1) / 2;           // dalsze = bledsze: tak czyta sie glebie
+
+    g.lineWidth = 1;
+    for (const [a, b, w] of G.edges) {
+      const A = at(a), B = at(b), lit = on >= 0 && (a === on || b === on);
+      g.globalAlpha = lit ? .9 : (on >= 0 ? .05 : .16 * fog((A.z + B.z) / 2));
+      g.strokeStyle = lit ? c('--c-accent') : c('--c-ink');
+      g.lineWidth = lit ? Math.min(3, .8 + w * .25) : Math.min(2, .5 + w * .12);
+      g.beginPath(); g.moveTo(A.x, A.y); g.lineTo(B.x, B.y); g.stroke();
+    }
+    g.globalAlpha = 1;
+
+    // os. = pelne kolko, miejsce = pierscien (jak na mapie), byt polityczny = kwadrat
+    for (const s of [...spots].sort((a, b) => a.z - b.z)) {
+      const n = N[s.i], r = (2.2 + Math.sqrt(n.n / maxN) * 9) * s.s;
+      s.r = r;
+      g.globalAlpha = on >= 0 && !hot.has(s.i) ? .18 : fog(s.z);
+      const col = s.i === on ? c('--c-ink') : c('--c-accent');
+      g.fillStyle = col; g.strokeStyle = col; g.lineWidth = 1.5;
+      g.beginPath();
+      if (n.kind === 'PoliticalEntity') g.rect(s.x - r * .85, s.y - r * .85, r * 1.7, r * 1.7);
+      else g.arc(s.x, s.y, r, 0, 7);
+      if (n.kind === 'Place') {
+        g.fillStyle = c('--paper'); g.fill(); g.stroke();
+      } else g.fill();
+    }
+    g.globalAlpha = 1;
+
+    // podpisy: wybrany + jego sasiedzi, a bez wyboru najczestsze; kolizje odsiewamy
+    const want = on >= 0 ? [...hot] : [...N.keys()].sort((a, b) => N[b].n - N[a].n).slice(0, 14);
+    g.font = `400 13px ${c('--face-ui')}`; g.textBaseline = 'middle'; g.textAlign = 'left';
+    const placed = [];
+    for (const i of want.sort((a, b) => (b === on) - (a === on) || N[b].n - N[a].n)) {
+      const s = at(i), lx = s.x + s.r + 5, ly = s.y;
+      const label = clip(N[i].label.split('|')[0], 34), w = g.measureText(label).width;
+      if (i !== on && placed.some(q => lx < q.x + q.w && q.x < lx + w && Math.abs(q.y - ly) < 14)) continue;
+      placed.push({ x: lx, y: ly, w });
+      g.font = `${i === on ? 700 : 400} 13px ${c('--face-ui')}`;
+      g.fillStyle = c('--paper'); g.globalAlpha = .75; g.fillRect(lx - 2, ly - 8, w + 4, 16);
+      g.globalAlpha = 1; g.fillStyle = i === on ? c('--c-ink') : c('--c-ink-2');
+      g.fillText(label, lx, ly);
+    }
+  };
+
+  const hit = (x, y) => [...spots].sort((a, b) => b.z - a.z)
+    .find(s => Math.hypot(s.x - x, s.y - y) < Math.max(s.r, 6) + 2);
+  let drag = null, moved = 0;
+  const stop = () => { spin = false; cancelAnimationFrame(raf); };
+
+  cv.onwheel = e => {
+    e.preventDefault(); stop();
+    zoom = Math.min(6, Math.max(.5, zoom * Math.exp(-e.deltaY * .0016)));
+    paint();
+  };
+  cv.onmousedown = e => { stop(); drag = { x: e.offsetX, y: e.offsetY, yaw, pitch }; moved = 0; };
+  const up = () => { drag = null; };
+  addEventListener('mouseup', up);
+  cv.onmousemove = e => {
+    if (drag) {
+      moved = Math.max(moved, Math.hypot(e.offsetX - drag.x, e.offsetY - drag.y));
+      yaw = drag.yaw + (e.offsetX - drag.x) * .008;
+      pitch = Math.max(-1.5, Math.min(1.5, drag.pitch + (e.offsetY - drag.y) * .008));
+      cv.style.cursor = 'grabbing'; paint();
+      return;
+    }
+    const s = hit(e.offsetX, e.offsetY);
+    cv.style.cursor = s ? 'pointer' : 'grab';
+    cv.title = s ? `${N[s.i].label} — ${t.netLetters(N[s.i].n)}` : '';
+  };
+  cv.onclick = e => {
+    if (moved > 3) return;
+    const s = hit(e.offsetX, e.offsetY);
+    S.net = s && N[s.i].id !== S.net ? N[s.i].id : null;
+    render();
+  };
+  cv.ondblclick = () => { ({ yaw, pitch, zoom } = HOME); paint(); };
+
+  profile();
+  const ro = new ResizeObserver(paint); ro.observe(cv);
+  // powolny obrot na wejsciu mowi „to jest bryla"; pierwszy dotyk go zatrzymuje
+  if (S.net || matchMedia('(prefers-reduced-motion: reduce)').matches) spin = false;
+  const turn = () => { if (!spin) return; yaw += .0025; paint(); raf = requestAnimationFrame(turn); };
+  raf = requestAnimationFrame(turn);
+  stage._cleanup = () => { ro.disconnect(); stop(); removeEventListener('mouseup', up); };
+  roster.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
+}
+
 // ── widok: zapytanie ──────────────────────────────────────────────────────────
 
 function viewQuery(stage) {
@@ -1012,7 +1184,7 @@ async function openReader(l) {
 
 // ── render + router ───────────────────────────────────────────────────────────
 
-const VIEWS = { letters: viewLetters, time: viewTime, people: viewPeople, places: viewPlaces, query: viewQuery };
+const VIEWS = { letters: viewLetters, time: viewTime, people: viewPeople, places: viewPlaces, net: viewNet, query: viewQuery };
 
 function render() {
   const stage = $('#stage');
@@ -1027,10 +1199,11 @@ function render() {
   if (S.tag) bits.push(`${t.fSubject}: ${S.tag}`);
   if (S.place) bits.push(`${t.fPlace}: ${S.place}`);
   if (S.person) bits.push(S.people.get(S.person)?.name);
+  if (S.mention) bits.push(`${t.fMention}: ${S.mention.label}`);
   if (S.find.trim()) bits.push(`“${S.find.trim()}”`);
 
-  $('#scope').innerHTML = S.view === 'query' || S.view === 'places'
-    ? esc({ query: S.src === 'db' ? t.cypherLive : t.cypherFrozen, places: t.placesTitle }[S.view])
+  $('#scope').innerHTML = ['query', 'places', 'net'].includes(S.view)
+    ? esc({ query: S.src === 'db' ? t.cypherLive : t.cypherFrozen, places: t.placesTitle, net: t.netTitle }[S.view])
       + (bits.length ? bits.map(b => `<span class="chip">${esc(b)}</span>`).join('')
         + ` <button id="clear">${t.clear}</button>` : '')
     : `${esc(t.nav[S.view])}<span class="n">${scope.length}</span>`
@@ -1038,7 +1211,7 @@ function render() {
       + (bits.length ? ` <button id="clear">${t.clear}</button>` : '');
   const clear = $('#clear');
   if (clear) clear.onclick = () => {
-    S.tag = S.person = S.place = null; S.find = ''; $('#find').value = ''; render();
+    S.tag = S.person = S.place = S.mention = null; S.find = ''; $('#find').value = ''; render();
   };
 
   $('#search').style.visibility = S.view === 'query' ? 'hidden' : 'visible';

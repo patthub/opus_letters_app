@@ -6,7 +6,7 @@ export const T = {
     htmlLang: 'pl',
     title: 'OPUS — korespondencja Henry’ego Wottona',
     subtitle: 'Korespondencja Henry’ego&nbsp;Wottona',
-    nav: { letters: 'Listy', time: 'Czas', people: 'Ludzie', places: 'Miejsca', query: 'Zapytanie' },
+    nav: { letters: 'Listy', time: 'Czas', people: 'Ludzie', places: 'Miejsca', net: 'Sieć', query: 'Zapytanie' },
     find: 'szukaj w listach…',
     connecting: 'łączę z Neo4j',
 
@@ -73,17 +73,26 @@ export const T = {
     subjects: 'Tematy', mentioned: 'Wzmiankowani',
     born: 'ur.', died: 'zm.', role: 'rola',
 
-    fSubject: 'temat', fPlace: 'miejsce', clear: 'wyczyść',
+    fSubject: 'temat', fPlace: 'miejsce', fMention: 'wzmianka', clear: 'wyczyść',
     cypherLive: 'Cypher — pisz własne',
     cypherFrozen: 'Cypher — wymaga żywej bazy',
     placesTitle: 'Miejsca nadania i przeznaczenia',
+    netTitle: 'Kto i co pada razem w listach',
+    netNote: 'Dwa byty łączą się, jeśli są wzmiankowane w tym samym liście — co najmniej ' +
+      'w dwóch. Wzmianki ma na razie 86 z 526 listów, więc to obraz tych 86, nie całego korpusu. ' +
+      'Układ 3D policzony w Blenderze (ForceAtlas2).',
+    netKey: '● osoba · ○ miejsce · ■ byt polityczny · wielkość = liczba listów',
+    netControls: 'przeciągnij, żeby obrócić · kółko przybliża · dwuklik wraca · kliknij węzeł',
+    netWith: 'najczęściej razem z',
+    netLetters: n => `${n} ${n === 1 ? 'list' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'listy' : 'listów'}`,
+    kind: { Person: 'osoba', Place: 'miejsce', PoliticalEntity: 'byt polityczny' },
   },
 
   en: {
     htmlLang: 'en',
     title: 'OPUS — the correspondence of Sir Henry Wotton',
     subtitle: 'The correspondence of Sir&nbsp;Henry&nbsp;Wotton',
-    nav: { letters: 'Letters', time: 'Time', people: 'People', places: 'Places', query: 'Query' },
+    nav: { letters: 'Letters', time: 'Time', people: 'People', places: 'Places', net: 'Network', query: 'Query' },
     find: 'search the letters…',
     connecting: 'connecting to Neo4j',
 
@@ -151,10 +160,19 @@ export const T = {
     subjects: 'Subjects', mentioned: 'Mentioned',
     born: 'born', died: 'died', role: 'role',
 
-    fSubject: 'subject', fPlace: 'place', clear: 'clear',
+    fSubject: 'subject', fPlace: 'place', fMention: 'mentions', clear: 'clear',
     cypherLive: 'Cypher — write your own',
     cypherFrozen: 'Cypher — needs a live database',
     placesTitle: 'Places of origin and destination',
+    netTitle: 'Who and what the letters mention together',
+    netNote: 'Two entities are linked when they are mentioned in the same letter — in at least ' +
+      'two. So far 86 of the 526 letters carry mentions, so this pictures those 86, not the whole ' +
+      'corpus. 3D layout computed in Blender (ForceAtlas2).',
+    netKey: '● person · ○ place · ■ political entity · size = number of letters',
+    netControls: 'drag to rotate · wheel zooms · double-click resets · click a node',
+    netWith: 'most often with',
+    netLetters: n => `${n} ${n === 1 ? 'letter' : 'letters'}`,
+    kind: { Person: 'person', Place: 'place', PoliticalEntity: 'political entity' },
   },
 };
 
